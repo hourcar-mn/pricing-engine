@@ -62,8 +62,8 @@ import pandas as pd
 SCRIPT_DIR = Path(__file__).resolve().parent
 RAW_DATA_DIR = SCRIPT_DIR
 
-TRIPS_CSV_NAME = "Trips_2026-06-08.csv"
-INVOICES_CSV_NAME = "Invoices_2026-06-08.csv"
+TRIPS_CSV_NAME = "Trips_2026-07-13.csv"
+INVOICES_CSV_NAME = "Invoices_2026-07-13.csv"
 
 TRIPS_CSV = RAW_DATA_DIR / TRIPS_CSV_NAME
 INVOICES_CSV = RAW_DATA_DIR / INVOICES_CSV_NAME
@@ -72,7 +72,8 @@ OUTPUT_DIR = SCRIPT_DIR / "01_clean_trips_invoice"
 OUTPUT_CSV = OUTPUT_DIR / "clean_trips_with_invoice_plan_and_segment.csv"
 
 WRITE_DASHBOARD_COPY = True
-DASHBOARD_COPY_CSV = SCRIPT_DIR.parent / "clean_trips_with_invoice_plan_and_segment.csv"
+DASHBOARD_COPY_CSV = SCRIPT_DIR.parent / \
+    "clean_trips_with_invoice_plan_and_segment.csv"
 
 SERVICE_TYPE_KEEP = "FREE_FLOATING"
 
@@ -291,8 +292,10 @@ if missing_trip_cols:
 trips["TripID"] = trips[TRIP_ID_COL]
 trips["UserID"] = trips[USER_ID_COL]
 trips["TripStartDT"] = parse_datetime(trips[TRIP_START_COL])
-trips["TripDistanceMiles"] = pd.to_numeric(trips[DISTANCE_COL], errors="coerce")
-trips["TripDurationMinutes"] = pd.to_numeric(trips[DURATION_COL], errors="coerce")
+trips["TripDistanceMiles"] = pd.to_numeric(
+    trips[DISTANCE_COL], errors="coerce")
+trips["TripDurationMinutes"] = pd.to_numeric(
+    trips[DURATION_COL], errors="coerce")
 
 before = len(trips)
 trips = trips[
@@ -320,7 +323,8 @@ trips = trips[
         inclusive="both",
     )
 ].copy()
-print_drop(f"Keep duration >= {MIN_DURATION_MINUTES} minutes", before, len(trips))
+print_drop(
+    f"Keep duration >= {MIN_DURATION_MINUTES} minutes", before, len(trips))
 
 before = len(trips)
 trips = trips[
@@ -333,14 +337,16 @@ trips = trips[
 print_drop(f"Keep distance >= {MIN_DISTANCE_MILES} miles", before, len(trips))
 
 before = len(trips)
-trips = trips.sort_values(["TripID", "TripStartDT"]).drop_duplicates("TripID", keep="first").copy()
+trips = trips.sort_values(["TripID", "TripStartDT"]).drop_duplicates(
+    "TripID", keep="first").copy()
 print_drop("Drop duplicate TripID rows in trip file", before, len(trips))
 
 trips["YearMonth"] = trips["TripStartDT"].dt.to_period("M")
 trips["MonthOfYear"] = trips["TripStartDT"].dt.month.astype(int)
 
 print("\nClean trip rows before invoice merge:", f"{len(trips):,}")
-print("Clean trip users before invoice merge:", f"{trips['UserID'].nunique():,}")
+print("Clean trip users before invoice merge:",
+      f"{trips['UserID'].nunique():,}")
 
 
 # =============================================================================
@@ -359,12 +365,14 @@ invoices = invoices.rename(columns={"MobilityPlan": "RawMobilityPlan"})
 
 print(f"Raw invoice rows: {len(invoices):,}")
 print(f"Raw unique invoice TripIDs: {invoices['TripID'].nunique():,}")
-print(f"Duplicate invoice rows by TripID: {invoices['TripID'].duplicated().sum():,}")
+print(
+    f"Duplicate invoice rows by TripID: {invoices['TripID'].duplicated().sum():,}")
 
 print("\nRaw invoice MobilityPlan counts:")
 print(invoices["RawMobilityPlan"].value_counts(dropna=False).to_string())
 
-invoices["PlanUsedForTrip"] = invoices["RawMobilityPlan"].map(normalize_plan_name)
+invoices["PlanUsedForTrip"] = invoices["RawMobilityPlan"].map(
+    normalize_plan_name)
 
 print("\nNormalized invoice plan counts:")
 print(invoices["PlanUsedForTrip"].value_counts(dropna=False).to_string())
@@ -386,7 +394,8 @@ plan_counts_by_trip = (
 
 all_invoice_tripids = invoices[["TripID"]].drop_duplicates()
 
-invoice_diag = all_invoice_tripids.merge(plan_counts_by_trip, on="TripID", how="left")
+invoice_diag = all_invoice_tripids.merge(
+    plan_counts_by_trip, on="TripID", how="left")
 invoice_diag["InvoiceTripIDFound"] = True
 invoice_diag["NumUsablePlansForTrip"] = (
     invoice_diag["NumUsablePlansForTrip"]
@@ -412,7 +421,8 @@ clean_invoice_plans = usable_pairs.merge(
 ).drop_duplicates("TripID")
 
 if clean_invoice_plans["TripID"].duplicated().any():
-    raise RuntimeError("Invoice plan collapse failed: duplicate TripID remains.")
+    raise RuntimeError(
+        "Invoice plan collapse failed: duplicate TripID remains.")
 
 print("\nCollapsed invoice plan rows available for merge:",
       f"{len(clean_invoice_plans):,}")
@@ -427,8 +437,10 @@ print_stage("STEP 3: Merge invoice plan onto clean trips")
 before = len(trips)
 
 merged = trips.merge(invoice_diag, on="TripID", how="left")
-merged["InvoiceTripIDFound"] = merged["InvoiceTripIDFound"].fillna(False)
-merged["NumUsablePlansForTrip"] = merged["NumUsablePlansForTrip"].fillna(-1).astype(int)
+merged["InvoiceTripIDFound"] = merged["InvoiceTripIDFound"].fillna(
+    False).astype(bool)
+merged["NumUsablePlansForTrip"] = merged["NumUsablePlansForTrip"].fillna(
+    -1).astype(int)
 
 merged = merged.merge(clean_invoice_plans, on="TripID", how="left")
 
@@ -440,8 +452,10 @@ if before != after:
     )
 
 print(f"Trips after merge: {len(merged):,}")
-print(f"Trips with usable invoice plan: {merged['PlanUsedForTrip'].notna().sum():,}")
-print(f"Trips missing usable invoice plan: {merged['PlanUsedForTrip'].isna().sum():,}")
+print(
+    f"Trips with usable invoice plan: {merged['PlanUsedForTrip'].notna().sum():,}")
+print(
+    f"Trips missing usable invoice plan: {merged['PlanUsedForTrip'].isna().sum():,}")
 
 missing_plan = merged[merged["PlanUsedForTrip"].isna()].copy()
 
@@ -461,9 +475,11 @@ print(f"Invoice exists but zero usable plans:   {len(zero_usable):,}")
 print(f"Invoice has conflicting usable plans:   {len(conflicting_invoice):,}")
 
 if len(zero_usable) > 0:
-    bad_invoice_rows = invoices[invoices["TripID"].isin(set(zero_usable["TripID"]))].copy()
+    bad_invoice_rows = invoices[invoices["TripID"].isin(
+        set(zero_usable["TripID"]))].copy()
     print("\nRaw MobilityPlan counts among zero-usable-plan dropped trips:")
-    print(bad_invoice_rows["RawMobilityPlan"].value_counts(dropna=False).to_string())
+    print(bad_invoice_rows["RawMobilityPlan"].value_counts(
+        dropna=False).to_string())
 
 print("\nPlan counts before dropping missing:")
 print(merged["PlanUsedForTrip"].value_counts(dropna=False).to_string())
@@ -473,7 +489,8 @@ clean = merged[merged["PlanUsedForTrip"].notna()].copy()
 print_drop("Drop trips missing usable invoice plan", before, len(clean))
 
 print("\nFinal clean trip rows before segment assignment:", f"{len(clean):,}")
-print("Final clean trip users before segment assignment:", f"{clean['UserID'].nunique():,}")
+print("Final clean trip users before segment assignment:",
+      f"{clean['UserID'].nunique():,}")
 
 
 # =============================================================================

@@ -17,14 +17,13 @@ next to this script before running:
 - user_month_access.csv
 """
 
+from app import main
 from pathlib import Path
 import sys
 
 THIS_FOLDER = Path(__file__).resolve().parent
 if str(THIS_FOLDER) not in sys.path:
     sys.path.insert(0, str(THIS_FOLDER))
-
-from app import main
 
 
 if __name__ == "__main__":

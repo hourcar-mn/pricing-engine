@@ -188,7 +188,8 @@ def parse_count_bin_item(item) -> CountBin:
         elif "-" in compact:
             parts = compact.split("-")
             if len(parts) != 2:
-                raise ValueError(f"Invalid trip-count bin {label!r}. Use formats like 01, 09-12, or 21+.")
+                raise ValueError(
+                    f"Invalid trip-count bin {label!r}. Use formats like 01, 09-12, or 21+.")
             lo = int(parts[0])
             hi = int(parts[1])
         else:
@@ -198,7 +199,8 @@ def parse_count_bin_item(item) -> CountBin:
     if lo < 1:
         raise ValueError("Trip-count bins must start at 1 or higher.")
     if hi is not None and hi < lo:
-        raise ValueError(f"Invalid trip-count bin {label!r}: upper bound is below lower bound.")
+        raise ValueError(
+            f"Invalid trip-count bin {label!r}: upper bound is below lower bound.")
     return CountBin(str(label), int(lo), None if hi is None else int(hi))
 
 
@@ -215,7 +217,8 @@ def bins_from_config(config: Optional[dict]) -> List[CountBin]:
     elif isinstance(raw, list):
         items = raw
     else:
-        raise ValueError("Trip-count bins must be provided as text lines or a list.")
+        raise ValueError(
+            "Trip-count bins must be provided as text lines or a list.")
     if not items:
         raise ValueError("At least one trip-count bin is required.")
     if len(items) > 40:
@@ -229,19 +232,24 @@ def bins_from_config(config: Optional[dict]) -> List[CountBin]:
     prev_hi = 0
     for idx, item in enumerate(bins):
         if prev_hi is None:
-            raise ValueError("Only the final trip-count bin can be open-ended.")
+            raise ValueError(
+                "Only the final trip-count bin can be open-ended.")
         if item.lo <= prev_hi:
-            raise ValueError(f"Trip-count bin {item.label!r} overlaps with the previous bin.")
+            raise ValueError(
+                f"Trip-count bin {item.label!r} overlaps with the previous bin.")
         if item.lo > prev_hi + 1:
-            raise ValueError(f"Trip-count bin {item.label!r} leaves a gap after {prev_hi}.")
+            raise ValueError(
+                f"Trip-count bin {item.label!r} leaves a gap after {prev_hi}.")
         if item.hi is None:
             if idx != len(bins) - 1:
-                raise ValueError("Only the final trip-count bin can be open-ended.")
+                raise ValueError(
+                    "Only the final trip-count bin can be open-ended.")
             prev_hi = None
         else:
             prev_hi = item.hi
     if bins[-1].hi is not None:
-        raise ValueError("The final trip-count bin must be open-ended, e.g. 21+.")
+        raise ValueError(
+            "The final trip-count bin must be open-ended, e.g. 21+.")
     return bins
 
 
@@ -314,9 +322,11 @@ def price_trip_array(durations: np.ndarray, distances: np.ndarray, params: dict)
 
 def price_basket(durations: Iterable[float], distances: Iterable[float], params: dict) -> Tuple[float, float]:
     """Return trip revenue and monthly out-of-pocket payment for one basket."""
-    charges = price_trip_array(np.asarray(list(durations), dtype=float), np.asarray(list(distances), dtype=float), params)
+    charges = price_trip_array(np.asarray(list(durations), dtype=float), np.asarray(
+        list(distances), dtype=float), params)
     trip_revenue = float(np.sum(charges))
-    user_payment = float(params["monthly_fee"]) + max(0.0, trip_revenue - float(params["monthly_credit"]))
+    user_payment = float(params["monthly_fee"]) + max(0.0,
+                                                      trip_revenue - float(params["monthly_credit"]))
     return trip_revenue, user_payment
 
 
@@ -358,13 +368,20 @@ def read_inputs(segment: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     user_month = pd.read_csv(USER_MONTH_FILES[segment], usecols=user_cols)
     trips = pd.read_csv(TRIP_FILE, usecols=trip_cols)
     user_month = user_month[user_month["UserSegment"].eq(segment)].copy()
-    user_month["TripCount"] = pd.to_numeric(user_month["TripCount"], errors="coerce").fillna(0).astype(int)
-    user_month["InMarket"] = pd.to_numeric(user_month["InMarket"], errors="coerce").fillna(0).astype(int)
-    user_month["MonthOfYear"] = pd.to_numeric(user_month["MonthOfYear"], errors="coerce").astype(int)
-    trips["MonthOfYear"] = pd.to_numeric(trips["MonthOfYear"], errors="coerce").astype(int)
-    trips["TripDurationMinutes"] = pd.to_numeric(trips["TripDurationMinutes"], errors="coerce")
-    trips["TripDistanceMiles"] = pd.to_numeric(trips["TripDistanceMiles"], errors="coerce")
-    trips = trips[trips["TripDurationMinutes"].notna() & trips["TripDistanceMiles"].notna()].copy()
+    user_month["TripCount"] = pd.to_numeric(
+        user_month["TripCount"], errors="coerce").fillna(0).astype(int)
+    user_month["InMarket"] = pd.to_numeric(
+        user_month["InMarket"], errors="coerce").fillna(0).astype(int)
+    user_month["MonthOfYear"] = pd.to_numeric(
+        user_month["MonthOfYear"], errors="coerce").astype(int)
+    trips["MonthOfYear"] = pd.to_numeric(
+        trips["MonthOfYear"], errors="coerce").astype(int)
+    trips["TripDurationMinutes"] = pd.to_numeric(
+        trips["TripDurationMinutes"], errors="coerce")
+    trips["TripDistanceMiles"] = pd.to_numeric(
+        trips["TripDistanceMiles"], errors="coerce")
+    trips = trips[trips["TripDurationMinutes"].notna(
+    ) & trips["TripDistanceMiles"].notna()].copy()
     cohort_keys = user_month[["UserID", "YearMonth"]].drop_duplicates()
     trips = trips.merge(cohort_keys, on=["UserID", "YearMonth"], how="inner")
     return user_month, trips
@@ -381,7 +398,8 @@ def read_all_inputs() -> Tuple[pd.DataFrame, pd.DataFrame]:
         trip_parts.append(trips)
     return (
         pd.concat(user_month_parts, ignore_index=True, sort=False),
-        pd.concat(trip_parts, ignore_index=True, sort=False).drop_duplicates("TripID"),
+        pd.concat(trip_parts, ignore_index=True,
+                  sort=False).drop_duplicates("TripID"),
     )
 
 
@@ -406,7 +424,8 @@ def data_options() -> dict:
                 "default_test_end": complete_months[-1] if complete_months else latest,
             }
         )
-    default_segment = next((row for row in segments if row["segment"] == "Regular"), segments[0])
+    default_segment = next(
+        (row for row in segments if row["segment"] == "Regular"), segments[0])
     defaults = {
         "train_start": default_segment["default_train_start"],
         "train_end": default_segment["default_train_end"],
@@ -497,7 +516,8 @@ def build_month_pricing(user_month: pd.DataFrame, plans: List[str]) -> Dict[Tupl
         for plan in plans:
             params = plan_pricing_from_row(row, plan)
             if params is None:
-                raise ValueError(f"Missing pricing JSON for {row['YearMonth']}, {plan}")
+                raise ValueError(
+                    f"Missing pricing JSON for {row['YearMonth']}, {plan}")
             out[(str(row["YearMonth"]), plan)] = params
     return out
 
@@ -514,7 +534,8 @@ def build_baskets(user_month: pd.DataFrame, trips: pd.DataFrame, plans: Optional
     positive = in_market[in_market["TripCount"].gt(0)].copy()
     if plans is not None:
         positive = positive[positive["PlanUsedThisMonth"].isin(plans)].copy()
-    trips = trips[trips["YearMonth"].isin(set(user_month["YearMonth"].astype(str).unique()))].copy()
+    trips = trips[trips["YearMonth"].isin(
+        set(user_month["YearMonth"].astype(str).unique()))].copy()
     grouped = (
         trips.groupby(["UserID", "YearMonth"], sort=False)
         .agg(
@@ -525,7 +546,8 @@ def build_baskets(user_month: pd.DataFrame, trips: pd.DataFrame, plans: Optional
         .reset_index()
     )
     baskets = positive.merge(grouped, on=["UserID", "YearMonth"], how="left")
-    baskets["matched_trip_rows"] = baskets["matched_trip_rows"].fillna(0).astype(int)
+    baskets["matched_trip_rows"] = baskets["matched_trip_rows"].fillna(
+        0).astype(int)
     baskets = baskets[baskets["matched_trip_rows"].gt(0)].copy()
     baskets["count_bin"] = assign_count_bin_series(baskets["TripCount"], bins)
     baskets = baskets[baskets["count_bin"].notna()].copy()
@@ -536,10 +558,12 @@ def compute_actual_revenue(baskets: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Data
     """Compute observed trip revenue and user-payment revenue from baskets."""
     rows = []
     for row in baskets.itertuples(index=False):
-        params = parse_pricing(row.FreePlanPricingAtMonth) if row.PlanUsedThisMonth == "Free Plan" else parse_pricing(row.PaidPlanPricingAtMonth)
+        params = parse_pricing(row.FreePlanPricingAtMonth) if row.PlanUsedThisMonth == "Free Plan" else parse_pricing(
+            row.PaidPlanPricingAtMonth)
         if params is None:
             continue
-        trip_revenue, user_payment = price_basket(row.durations, row.distances, params)
+        trip_revenue, user_payment = price_basket(
+            row.durations, row.distances, params)
         rows.append(
             {
                 "YearMonth": str(row.YearMonth),
@@ -564,7 +588,8 @@ def compute_actual_revenue(baskets: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Data
     )
     if not basket_revenue.empty:
         plan_trips = (
-            basket_revenue.assign(plan_group=np.where(basket_revenue["plan"].eq("Free Plan"), "free_plan", "paid_plan"))
+            basket_revenue.assign(plan_group=np.where(
+                basket_revenue["plan"].eq("Free Plan"), "free_plan", "paid_plan"))
             .groupby(["YearMonth", "plan_group"], as_index=False)["TripCount"]
             .sum()
             .pivot(index="YearMonth", columns="plan_group", values="TripCount")
@@ -638,7 +663,8 @@ def kernel_condition_description(use_segment: bool, use_plan: bool, use_count: b
     if use_moy:
         parts.append("same month-of-year")
     if use_plan:
-        parts.append("same plan" if use_segment else "same paid/free plan group")
+        parts.append(
+            "same plan" if use_segment else "same paid/free plan group")
     if use_count:
         parts.append("same count bin")
     return ", ".join(parts) if parts else "all positive-use baskets"
@@ -679,7 +705,8 @@ def kernel_condition_candidates(kernel_spec: dict) -> List[Tuple[bool, bool, boo
         "count_bin": True,
         "month_of_year": bool(kernel_spec.get("condition_month_of_year", True)),
     }
-    raw_order = kernel_spec.get("relax_order", DEFAULT_KERNEL_SPEC["relax_order"])
+    raw_order = kernel_spec.get(
+        "relax_order", DEFAULT_KERNEL_SPEC["relax_order"])
     relax_order = []
     for item in raw_order:
         item = str(item)
@@ -740,20 +767,26 @@ def choose_kernel_source(
     candidates = kernel_condition_candidates(spec)
     supported = []
     for use_segment, use_plan, use_count, use_moy in candidates:
-        source = filter_kernel_source(baskets, segment, plan, count_bin, month, use_segment, use_plan, use_count, use_moy)
+        source = filter_kernel_source(
+            baskets, segment, plan, count_bin, month, use_segment, use_plan, use_count, use_moy)
         if str(spec.get("fallback_style", "legacy")).lower() == "legacy" and use_moy:
-            threshold = int(spec.get("legacy_month_support", LEGACY_MONTH_SUPPORT))
+            threshold = int(
+                spec.get("legacy_month_support", LEGACY_MONTH_SUPPORT))
         else:
             threshold = int(spec.get("min_support", MIN_SUPPORT))
-        label = kernel_condition_label(use_segment, use_plan, use_count, use_moy)
+        label = kernel_condition_label(
+            use_segment, use_plan, use_count, use_moy)
         if len(source) >= threshold:
             return source, label, (use_segment, use_plan, use_count, use_moy)
-        supported.append((source, label, (use_segment, use_plan, use_count, use_moy)))
-    nonempty = [(source, label, flags) for source, label, flags in supported if len(source) > 0]
+        supported.append(
+            (source, label, (use_segment, use_plan, use_count, use_moy)))
+    nonempty = [(source, label, flags)
+                for source, label, flags in supported if len(source) > 0]
     if nonempty:
         source, label, flags = max(nonempty, key=lambda item: len(item[0]))
         return source, kernel_condition_label(*flags, low_support=True), flags
-    empty_same_count = filter_kernel_source(baskets, segment, plan, count_bin, month, False, False, True, False)
+    empty_same_count = filter_kernel_source(
+        baskets, segment, plan, count_bin, month, False, False, True, False)
     return empty_same_count, "count_bin_empty", (False, False, True, False)
 
 
@@ -840,9 +873,11 @@ def trip_count_histogram(source_df: pd.DataFrame) -> List[dict]:
     edges = list(range(1, max_count + 6, 5))
     if edges[-1] <= max_count:
         edges.append(max_count + 1)
-    hist, edge_arr = np.histogram(counts.to_numpy(dtype=float), bins=np.asarray(edges, dtype=float))
+    hist, edge_arr = np.histogram(counts.to_numpy(
+        dtype=float), bins=np.asarray(edges, dtype=float))
     return [
-        {"label": f"{int(edge_arr[i])}-{int(edge_arr[i + 1] - 1)}", "count": int(hist[i])}
+        {"label": f"{int(edge_arr[i])}-{int(edge_arr[i + 1] - 1)}",
+         "count": int(hist[i])}
         for i in range(len(hist))
         if int(hist[i]) > 0
     ]
@@ -882,7 +917,8 @@ def kernel_source_payload(source_df: pd.DataFrame) -> dict:
     """Summarize the empirical kernel source for dashboard diagnostics."""
     durations = flatten_list_column(source_df, "durations")
     distances = flatten_list_column(source_df, "distances")
-    trip_counts = source_df["TripCount"].dropna().astype(float).to_numpy(dtype=float) if "TripCount" in source_df else np.asarray([], dtype=float)
+    trip_counts = source_df["TripCount"].dropna().astype(float).to_numpy(
+        dtype=float) if "TripCount" in source_df else np.asarray([], dtype=float)
     return {
         "source_baskets": int(len(source_df)),
         "source_trip_rows": int(source_df["matched_trip_rows"].sum()) if "matched_trip_rows" in source_df else int(len(durations)),
@@ -908,7 +944,8 @@ def kernel_detail_row(
     source_payload: Optional[dict] = None,
 ) -> dict:
     use_segment, use_plan, use_count, use_moy = condition_flags
-    payload = kernel_source_payload(source_df) if source_payload is None else dict(source_payload)
+    payload = kernel_source_payload(
+        source_df) if source_payload is None else dict(source_payload)
     return {
         "YearMonth": month,
         "product": product,
@@ -935,21 +972,25 @@ def expected_costs(
     diag = []
     source_cache: Dict[Tuple[object, ...], FastKernelSource] = {}
     payload_cache: Dict[Tuple[object, ...], dict] = {}
-    value_cache: Dict[Tuple[Tuple[object, ...], Tuple[float, ...]], Tuple[float, float, float]] = {}
+    value_cache: Dict[Tuple[Tuple[object, ...],
+                            Tuple[float, ...]], Tuple[float, float, float]] = {}
     for month in months:
         for plan in plans:
             params = month_pricing[(month, plan)]
             params_key = pricing_signature(params)
             for count_bin in [b.label for b in bins]:
                 product = product_name(plan, count_bin)
-                source, source_label, condition_flags = choose_kernel_source(baskets, segment, plan, count_bin, month, kernel_spec)
-                source_key = kernel_cache_key(segment, plan, count_bin, month, condition_flags)
+                source, source_label, condition_flags = choose_kernel_source(
+                    baskets, segment, plan, count_bin, month, kernel_spec)
+                source_key = kernel_cache_key(
+                    segment, plan, count_bin, month, condition_flags)
                 if source_key not in source_cache:
                     source_cache[source_key] = fast_source_from_baskets(source)
                     payload_cache[source_key] = kernel_source_payload(source)
                 cache_key = (source_key, params_key)
                 if cache_key not in value_cache:
-                    value_cache[cache_key] = fast_price_source(source_cache[source_key], params)
+                    value_cache[cache_key] = fast_price_source(
+                        source_cache[source_key], params)
                 trip_count, trip_rev, user_pay = value_cache[cache_key]
                 payload = payload_cache[source_key]
                 rows.append(
@@ -966,7 +1007,8 @@ def expected_costs(
                         "source_trip_rows": payload["source_trip_rows"],
                     }
                 )
-                diag.append(kernel_detail_row(month, product, plan, count_bin, source_label, source, condition_flags, payload))
+                diag.append(kernel_detail_row(
+                    month, product, plan, count_bin, source_label, source, condition_flags, payload))
     return pd.DataFrame(rows), pd.DataFrame(diag)
 
 
@@ -988,11 +1030,15 @@ def build_share_panel(
         months = sorted(user_month["YearMonth"].astype(str).unique())
     in_market = user_month[user_month["InMarket"].eq(1)].copy()
     in_market = in_market[in_market["YearMonth"].isin(months)].copy()
-    positive = in_market[in_market["TripCount"].gt(0) & in_market["PlanUsedThisMonth"].isin(plans)].copy()
-    positive["count_bin"] = assign_count_bin_series(positive["TripCount"], bins)
+    positive = in_market[in_market["TripCount"].gt(
+        0) & in_market["PlanUsedThisMonth"].isin(plans)].copy()
+    positive["count_bin"] = assign_count_bin_series(
+        positive["TripCount"], bins)
     positive = positive[positive["count_bin"].notna()].copy()
-    positive["product"] = [product_name(p, b) for p, b in zip(positive["PlanUsedThisMonth"], positive["count_bin"])]
-    counts = positive.groupby(["YearMonth", "product"], as_index=False).size().rename(columns={"size": "observed_count"})
+    positive["product"] = [product_name(p, b) for p, b in zip(
+        positive["PlanUsedThisMonth"], positive["count_bin"])]
+    counts = positive.groupby(["YearMonth", "product"], as_index=False).size(
+    ).rename(columns={"size": "observed_count"})
     if market_sizes is None:
         market_df = (
             in_market.groupby("YearMonth", as_index=False)
@@ -1031,7 +1077,8 @@ def build_share_panel(
     panel["observed_share"] = panel["observed_count"] / panel["market_size"]
     panel["outside_share"] = panel["outside_count"] / panel["market_size"]
     if panel["outside_count"].notna().all():
-        panel["delta"] = np.log(panel["observed_count"] + EPSILON) - np.log(panel["outside_count"] + EPSILON)
+        panel["delta"] = np.log(
+            panel["observed_count"] + EPSILON) - np.log(panel["outside_count"] + EPSILON)
     else:
         panel["delta"] = np.nan
     panel = panel.merge(
@@ -1051,7 +1098,8 @@ def build_share_panel(
         how="left",
     )
     if panel["expected_user_payment"].isna().any():
-        missing = panel[panel["expected_user_payment"].isna()][["YearMonth", "product"]].head().to_dict("records")
+        missing = panel[panel["expected_user_payment"].isna(
+        )][["YearMonth", "product"]].head().to_dict("records")
         raise ValueError(f"Missing expected payments: {missing}")
     return panel
 
@@ -1079,7 +1127,8 @@ def coefficient_value(coef: pd.DataFrame, variable: str) -> Tuple[float, float]:
 
 
 def model_spec_for_dashboard(spec: dict, plans: List[str]) -> dict:
-    terms = [label for key, label in MODEL_SPEC_LABELS.items() if spec.get(key, False)]
+    terms = [label for key, label in MODEL_SPEC_LABELS.items()
+             if spec.get(key, False)]
     references = {
         "outside_option": "No use / 0 trips has utility normalized to 0",
     }
@@ -1132,7 +1181,8 @@ def kernel_rule_for_dashboard(kernel_spec: Optional[dict] = None) -> dict:
         "relax_order_labels": [labels.get(item, item) for item in spec.get("relax_order", DEFAULT_KERNEL_SPEC["relax_order"])],
         "allow_low_support": bool(spec.get("allow_low_support", False)),
         "fallback_order": [
-            kernel_condition_description(use_segment, use_plan, use_count, use_moy)
+            kernel_condition_description(
+                use_segment, use_plan, use_count, use_moy)
             for use_segment, use_plan, use_count, use_moy in candidates
         ],
     }
@@ -1150,11 +1200,14 @@ def build_design(panel: pd.DataFrame, model_spec: Optional[dict] = None, include
         expected_payment = panel["expected_user_payment"].astype(float)
         pieces.append(expected_payment.rename("expected_user_payment"))
     if spec.get("include_count_fe", True):
-        pieces.append(pd.get_dummies(panel["count_bin"].astype(str), prefix="count", drop_first=True, dtype=float))
+        pieces.append(pd.get_dummies(panel["count_bin"].astype(
+            str), prefix="count", drop_first=True, dtype=float))
     if spec.get("include_plan_fe", True):
-        pieces.append(pd.get_dummies(panel["plan"].astype(str), prefix="plan", drop_first=True, dtype=float))
+        pieces.append(pd.get_dummies(panel["plan"].astype(
+            str), prefix="plan", drop_first=True, dtype=float))
     if spec.get("include_month_fe", True):
-        pieces.append(pd.get_dummies(panel["MonthOfYear"].astype(str).str.zfill(2), prefix="month", drop_first=True, dtype=float))
+        pieces.append(pd.get_dummies(panel["MonthOfYear"].astype(
+            str).str.zfill(2), prefix="month", drop_first=True, dtype=float))
     if not pieces:
         return pd.DataFrame(index=panel.index)
     return pd.concat(pieces, axis=1)
@@ -1193,8 +1246,10 @@ def fit_wls_cluster(df: pd.DataFrame, y_col: str, x_cols: List[str], weight_col:
     scale = (g / max(g - 1, 1)) * ((n - 1) / max(n - k, 1)) if g > 1 else 1.0
     cov = scale * xtx_inv @ meat @ xtx_inv
     se = np.sqrt(np.maximum(np.diag(cov), 0.0))
-    coef = pd.DataFrame({"variable": x_cols, "coefficient": beta, "cluster_se": se})
-    coef["z_stat"] = coef["coefficient"] / coef["cluster_se"].replace(0, np.nan)
+    coef = pd.DataFrame(
+        {"variable": x_cols, "coefficient": beta, "cluster_se": se})
+    coef["z_stat"] = coef["coefficient"] / \
+        coef["cluster_se"].replace(0, np.nan)
     coef["p_value_normal"] = coef["z_stat"].apply(normal_p_value)
     return coef, fitted, r2
 
@@ -1202,22 +1257,33 @@ def fit_wls_cluster(df: pd.DataFrame, y_col: str, x_cols: List[str], weight_col:
 def estimate_predict(panel: pd.DataFrame, train_months: List[str], include_price: bool = True, model_spec: Optional[dict] = None) -> Tuple[pd.DataFrame, pd.DataFrame, float]:
     """Estimate utility parameters and convert fitted utilities to shares."""
     model_df = panel.copy()
-    model_df["split"] = np.where(model_df["YearMonth"].isin(train_months), "train", "test")
-    X = build_design(model_df, model_spec=model_spec, include_price=include_price, train_months=train_months)
+    model_df["split"] = np.where(
+        model_df["YearMonth"].isin(train_months), "train", "test")
+    X = build_design(model_df, model_spec=model_spec,
+                     include_price=include_price, train_months=train_months)
     if X.shape[1] == 0:
-        raise ValueError("The selected model has no regressors. Include price, an intercept, or at least one fixed effect.")
-    fit_df = pd.concat([model_df[["delta", "market_size", "YearMonth", "split"]], X], axis=1)
+        raise ValueError(
+            "The selected model has no regressors. Include price, an intercept, or at least one fixed effect.")
+    fit_df = pd.concat(
+        [model_df[["delta", "market_size", "YearMonth", "split"]], X], axis=1)
     train = fit_df[fit_df["split"].eq("train")].copy()
-    coef, _fitted, train_r2 = fit_wls_cluster(train, "delta", list(X.columns), "market_size", "YearMonth")
-    beta = coef.set_index("variable")["coefficient"].reindex(X.columns).fillna(0.0).to_numpy(dtype=float)
+    coef, _fitted, train_r2 = fit_wls_cluster(
+        train, "delta", list(X.columns), "market_size", "YearMonth")
+    beta = coef.set_index("variable")["coefficient"].reindex(
+        X.columns).fillna(0.0).to_numpy(dtype=float)
     model_df["delta_hat"] = X.to_numpy(dtype=float) @ beta
     model_df["exp_delta_hat"] = np.exp(np.clip(model_df["delta_hat"], -50, 50))
-    denom = model_df.groupby("YearMonth")["exp_delta_hat"].transform("sum") + 1.0
+    denom = model_df.groupby("YearMonth")[
+        "exp_delta_hat"].transform("sum") + 1.0
     model_df["predicted_share"] = model_df["exp_delta_hat"] / denom
-    model_df["predicted_count"] = model_df["market_size"] * model_df["predicted_share"]
-    model_df["predicted_trip_count_component"] = model_df["predicted_count"] * model_df["expected_trip_count"]
-    model_df["predicted_trip_revenue_component"] = model_df["predicted_count"] * model_df["expected_trip_revenue"]
-    model_df["predicted_user_payment_component"] = model_df["predicted_count"] * model_df["expected_user_payment"]
+    model_df["predicted_count"] = model_df["market_size"] * \
+        model_df["predicted_share"]
+    model_df["predicted_trip_count_component"] = model_df["predicted_count"] * \
+        model_df["expected_trip_count"]
+    model_df["predicted_trip_revenue_component"] = model_df["predicted_count"] * \
+        model_df["expected_trip_revenue"]
+    model_df["predicted_user_payment_component"] = model_df["predicted_count"] * \
+        model_df["expected_user_payment"]
     coef["model_variant"] = "with_price" if include_price else "no_price"
     return model_df, coef, train_r2
 
@@ -1233,13 +1299,16 @@ def utility_parts_for_counterfactual(
     one_dollar = panel.copy()
     zero_price["expected_user_payment"] = 0.0
     one_dollar["expected_user_payment"] = 1.0
-    x0 = build_design(zero_price, model_spec=model_spec, train_months=train_months)
-    x1 = build_design(one_dollar, model_spec=model_spec, train_months=train_months)
+    x0 = build_design(zero_price, model_spec=model_spec,
+                      train_months=train_months)
+    x1 = build_design(one_dollar, model_spec=model_spec,
+                      train_months=train_months)
     x0 = x0.reindex(columns=beta.index, fill_value=0.0)
     x1 = x1.reindex(columns=beta.index, fill_value=0.0)
     beta_vector = beta.reindex(x0.columns).fillna(0.0).to_numpy(dtype=float)
     utility_without_price = x0.to_numpy(dtype=float) @ beta_vector
-    price_slope = (x1.to_numpy(dtype=float) - x0.to_numpy(dtype=float)) @ beta_vector
+    price_slope = (x1.to_numpy(dtype=float) -
+                   x0.to_numpy(dtype=float)) @ beta_vector
     return utility_without_price, price_slope
 
 
@@ -1248,7 +1317,8 @@ def revenue_by_month(predicted: pd.DataFrame, actual: pd.DataFrame) -> pd.DataFr
         predicted.groupby("YearMonth", as_index=False)
         .agg(
             predicted_trip_revenue=("predicted_trip_revenue_component", "sum"),
-            predicted_user_payment_revenue=("predicted_user_payment_component", "sum"),
+            predicted_user_payment_revenue=(
+                "predicted_user_payment_component", "sum"),
             predicted_positive_users=("predicted_count", "sum"),
             predicted_total_trips=("predicted_trip_count_component", "sum"),
             observed_positive_users=("observed_count", "sum"),
@@ -1256,17 +1326,21 @@ def revenue_by_month(predicted: pd.DataFrame, actual: pd.DataFrame) -> pd.DataFr
         )
     )
     plan_trips = (
-        predicted.assign(plan_group=np.where(predicted["plan"].eq("Free Plan"), "free_plan", "paid_plan"))
+        predicted.assign(plan_group=np.where(
+            predicted["plan"].eq("Free Plan"), "free_plan", "paid_plan"))
         .groupby(["YearMonth", "plan_group"], as_index=False)["predicted_trip_count_component"]
         .sum()
         .pivot(index="YearMonth", columns="plan_group", values="predicted_trip_count_component")
         .reset_index()
         .rename(columns={"free_plan": "predicted_free_plan_trips", "paid_plan": "predicted_paid_plan_trips"})
     )
-    monthly = predicted_monthly.merge(plan_trips, on="YearMonth", how="left").merge(actual, on="YearMonth", how="left").sort_values("YearMonth")
+    monthly = predicted_monthly.merge(plan_trips, on="YearMonth", how="left").merge(
+        actual, on="YearMonth", how="left").sort_values("YearMonth")
     monthly["actual_trip_revenue"] = monthly["actual_trip_revenue"].fillna(0.0)
-    monthly["actual_user_payment_revenue"] = monthly["actual_user_payment_revenue"].fillna(0.0)
-    monthly["actual_positive_users"] = monthly["actual_positive_users"].fillna(0.0)
+    monthly["actual_user_payment_revenue"] = monthly["actual_user_payment_revenue"].fillna(
+        0.0)
+    monthly["actual_positive_users"] = monthly["actual_positive_users"].fillna(
+        0.0)
     for col in [
         "predicted_free_plan_trips",
         "predicted_paid_plan_trips",
@@ -1284,19 +1358,25 @@ def metrics_for_split(predicted: pd.DataFrame, monthly: pd.DataFrame, split: str
     """Compute revenue and trip-volume prediction errors for one split."""
     p = predicted[predicted["split"].eq(split)].copy()
     m = monthly[monthly["split"].eq(split)].copy()
+
     def mae(a):
         return float(np.mean(np.abs(a))) if len(a) else float("nan")
+
     def rmse(a):
         return float(np.sqrt(np.mean(np.square(a)))) if len(a) else float("nan")
+
     def mape(error, actual):
         denom = actual.replace(0, np.nan)
         return mae(error / denom)
-    rev_err = m["predicted_user_payment_revenue"] - m["actual_user_payment_revenue"]
+    rev_err = m["predicted_user_payment_revenue"] - \
+        m["actual_user_payment_revenue"]
     trip_err = m["predicted_trip_revenue"] - m["actual_trip_revenue"]
     dem_err = m["predicted_positive_users"] - m["observed_positive_users"]
     total_trip_count_err = m["predicted_total_trips"] - m["actual_total_trips"]
-    free_plan_trip_count_err = m["predicted_free_plan_trips"] - m["actual_free_plan_trips"]
-    paid_plan_trip_count_err = m["predicted_paid_plan_trips"] - m["actual_paid_plan_trips"]
+    free_plan_trip_count_err = m["predicted_free_plan_trips"] - \
+        m["actual_free_plan_trips"]
+    paid_plan_trip_count_err = m["predicted_paid_plan_trips"] - \
+        m["actual_paid_plan_trips"]
     product_err = p["predicted_count"] - p["observed_count"]
     share_err = p["predicted_share"] - p["observed_share"]
     return {
@@ -1437,8 +1517,10 @@ def add_forecast_outside_row(product_summary: pd.DataFrame, monthly: pd.DataFram
     what_if = monthly[monthly["scenario"].eq("What-if pricing")].copy()
     if current.empty or what_if.empty:
         return product_summary
-    current_outside = current["market_size"] - current["predicted_positive_users"]
-    what_if_outside = what_if["market_size"] - what_if["predicted_positive_users"]
+    current_outside = current["market_size"] - \
+        current["predicted_positive_users"]
+    what_if_outside = what_if["market_size"] - \
+        what_if["predicted_positive_users"]
     outside = pd.DataFrame(
         [
             {
@@ -1469,18 +1551,24 @@ def warnings_from_model(price_coef: float, price_p: float, metrics: List[dict], 
     """Create dashboard warnings from fitted demand-model diagnostics."""
     warnings = []
     if not include_price:
-        warnings.append({"level": "warn", "message": "Price coefficient is not included. Demand will not respond to price changes in what-if or optimization runs."})
+        warnings.append(
+            {"level": "warn", "message": "Price coefficient is not included. Demand will not respond to price changes in what-if or optimization runs."})
     elif not np.isfinite(price_coef):
-        warnings.append({"level": "danger", "message": "Price coefficient was not estimated."})
+        warnings.append(
+            {"level": "danger", "message": "Price coefficient was not estimated."})
     elif price_coef < 0:
-        warnings.append({"level": "good", "message": f"Price coefficient is negative as expected ({price_coef:.5f})."})
+        warnings.append(
+            {"level": "good", "message": f"Price coefficient is negative as expected ({price_coef:.5f})."})
     else:
-        warnings.append({"level": "danger", "message": f"Price coefficient is non-negative ({price_coef:.5f}); counterfactual price responses are not credible."})
+        warnings.append(
+            {"level": "danger", "message": f"Price coefficient is non-negative ({price_coef:.5f}); counterfactual price responses are not credible."})
     if np.isfinite(price_p) and price_p > 0.10:
-        warnings.append({"level": "warn", "message": f"Price coefficient is imprecise (p={price_p:.3f})."})
+        warnings.append(
+            {"level": "warn", "message": f"Price coefficient is imprecise (p={price_p:.3f})."})
     test = next((m for m in metrics if m["split"] == "test"), None)
     if test and np.isfinite(test.get("user_payment_revenue_mape", np.nan)) and test["user_payment_revenue_mape"] > 0.25:
-        warnings.append({"level": "warn", "message": f"Test revenue MAPE is high ({100 * test['user_payment_revenue_mape']:.1f}%)."})
+        warnings.append(
+            {"level": "warn", "message": f"Test revenue MAPE is high ({100 * test['user_payment_revenue_mape']:.1f}%)."})
     return warnings
 
 
@@ -1488,9 +1576,11 @@ def warnings_from_kernel(kernel_diag: pd.DataFrame, min_support: int) -> List[di
     """Create dashboard warnings when empirical kernels are sparse."""
     if kernel_diag.empty:
         return [{"level": "warn", "message": "No kernel diagnostics were returned."}]
-    zero = kernel_diag[kernel_diag["source_baskets"].le(0)] if "source_baskets" in kernel_diag else pd.DataFrame()
+    zero = kernel_diag[kernel_diag["source_baskets"].le(
+        0)] if "source_baskets" in kernel_diag else pd.DataFrame()
     sparse = kernel_diag[
-        kernel_diag["source_baskets"].gt(0) & kernel_diag["source_baskets"].lt(int(min_support))
+        kernel_diag["source_baskets"].gt(
+            0) & kernel_diag["source_baskets"].lt(int(min_support))
     ] if "source_baskets" in kernel_diag else pd.DataFrame()
     warnings = []
     if not zero.empty:
@@ -1521,7 +1611,8 @@ def run_validation(config: dict) -> dict:
     model_spec = model_spec_from_config(config, require_price=False)
     kernel_spec = kernel_spec_from_config(config)
     user_month_raw, trips_raw = read_inputs(segment)
-    user_month, trips, excluded_latest = filter_latest(user_month_raw, trips_raw, bool(config.get("drop_latest", True)))
+    user_month, trips, excluded_latest = filter_latest(
+        user_month_raw, trips_raw, bool(config.get("drop_latest", True)))
     train_months, test_months = choose_validation_months(
         user_month,
         config["train_start"],
@@ -1529,32 +1620,45 @@ def run_validation(config: dict) -> dict:
         config["test_start"],
         config["test_end"],
     )
-    user_month_window, trips_window, train_user_month, train_trips = split_data(user_month, trips, train_months, test_months)
+    user_month_window, trips_window, train_user_month, train_trips = split_data(
+        user_month, trips, train_months, test_months)
     month_pricing = build_month_pricing(user_month_window, plans)
     kernel_user_month_raw, kernel_trips_raw = read_all_inputs()
-    kernel_user_month = kernel_user_month_raw[kernel_user_month_raw["YearMonth"].isin(train_months)].copy()
-    kernel_trips = kernel_trips_raw[kernel_trips_raw["YearMonth"].isin(train_months)].copy()
+    kernel_user_month = kernel_user_month_raw[kernel_user_month_raw["YearMonth"].isin(
+        train_months)].copy()
+    kernel_trips = kernel_trips_raw[kernel_trips_raw["YearMonth"].isin(
+        train_months)].copy()
     train_baskets = build_baskets(kernel_user_month, kernel_trips, bins=bins)
-    all_baskets = build_baskets(user_month_window, trips_window, plans, bins=bins)
+    all_baskets = build_baskets(
+        user_month_window, trips_window, plans, bins=bins)
     actual_monthly, _basket_revenue = compute_actual_revenue(all_baskets)
-    costs, kernel_diag = expected_costs(train_baskets, segment, month_pricing, train_months + test_months, plans, kernel_spec=kernel_spec, bins=bins)
-    panel = build_share_panel(user_month_window, costs, plans, train_months + test_months, bins=bins)
+    costs, kernel_diag = expected_costs(train_baskets, segment, month_pricing,
+                                        train_months + test_months, plans, kernel_spec=kernel_spec, bins=bins)
+    panel = build_share_panel(user_month_window, costs,
+                              plans, train_months + test_months, bins=bins)
     include_price = bool(model_spec.get("include_price", True))
-    pred_price, coef_price, r2_price = estimate_predict(panel, train_months, include_price=include_price, model_spec=model_spec)
+    pred_price, coef_price, r2_price = estimate_predict(
+        panel, train_months, include_price=include_price, model_spec=model_spec)
     non_price_spec = dict(model_spec)
     non_price_spec["include_price"] = False
-    can_fit_no_price = include_price and any(non_price_spec.get(k, False) for k in ["include_intercept", "include_count_fe", "include_plan_fe", "include_month_fe"])
+    can_fit_no_price = include_price and any(non_price_spec.get(k, False) for k in [
+                                             "include_intercept", "include_count_fe", "include_plan_fe", "include_month_fe"])
     if can_fit_no_price:
-        pred_noprice, coef_noprice, r2_noprice = estimate_predict(panel, train_months, include_price=False, model_spec=model_spec)
+        pred_noprice, coef_noprice, r2_noprice = estimate_predict(
+            panel, train_months, include_price=False, model_spec=model_spec)
         monthly_noprice = revenue_by_month(pred_noprice, actual_monthly)
-        monthly_noprice["split"] = np.where(monthly_noprice["YearMonth"].isin(train_months), "train", "test")
+        monthly_noprice["split"] = np.where(
+            monthly_noprice["YearMonth"].isin(train_months), "train", "test")
     else:
-        coef_noprice = pd.DataFrame(columns=["variable", "coefficient", "cluster_se", "z_stat", "p_value_normal", "model_variant"])
+        coef_noprice = pd.DataFrame(columns=[
+                                    "variable", "coefficient", "cluster_se", "z_stat", "p_value_normal", "model_variant"])
         r2_noprice = float("nan")
         monthly_noprice = pd.DataFrame()
     monthly_price = revenue_by_month(pred_price, actual_monthly)
-    monthly_price["split"] = np.where(monthly_price["YearMonth"].isin(train_months), "train", "test")
-    metric_rows = [metrics_for_split(pred_price, monthly_price, "train"), metrics_for_split(pred_price, monthly_price, "test")]
+    monthly_price["split"] = np.where(
+        monthly_price["YearMonth"].isin(train_months), "train", "test")
+    metric_rows = [metrics_for_split(pred_price, monthly_price, "train"), metrics_for_split(
+        pred_price, monthly_price, "test")]
     product_summary = (
         pred_price[pred_price["split"].eq("test")]
         .groupby(["plan", "count_bin", "product"], as_index=False)
@@ -1566,12 +1670,18 @@ def run_validation(config: dict) -> dict:
         )
         .sort_values(["plan", "count_bin"])
     )
-    product_summary["prediction_error"] = product_summary["predicted_test_positive_users"] - product_summary["actual_test_positive_users"]
-    product_summary["bin_sort"] = product_summary["count_bin"].map(lambda value: bin_sort_value(value, bins))
-    product_summary = add_validation_outside_row(product_summary, monthly_price, split="test")
-    price_coef, price_p = coefficient_value(coef_price, "expected_user_payment")
-    warning_rows = warnings_from_model(price_coef, price_p, metric_rows, include_price=include_price)
-    warning_rows.extend(warnings_from_kernel(kernel_diag, kernel_spec.get("min_support", MIN_SUPPORT)))
+    product_summary["prediction_error"] = product_summary["predicted_test_positive_users"] - \
+        product_summary["actual_test_positive_users"]
+    product_summary["bin_sort"] = product_summary["count_bin"].map(
+        lambda value: bin_sort_value(value, bins))
+    product_summary = add_validation_outside_row(
+        product_summary, monthly_price, split="test")
+    price_coef, price_p = coefficient_value(
+        coef_price, "expected_user_payment")
+    warning_rows = warnings_from_model(
+        price_coef, price_p, metric_rows, include_price=include_price)
+    warning_rows.extend(warnings_from_kernel(
+        kernel_diag, kernel_spec.get("min_support", MIN_SUPPORT)))
     return json_safe(
         {
             "config": {
@@ -1613,7 +1723,8 @@ def latest_pricing(segment: str, train_end: Optional[str] = None, drop_latest: b
     """Return the latest observed pricing parameters for one segment."""
     plans = SEGMENT_PLANS[segment]
     user_month_raw, trips_raw = read_inputs(segment)
-    user_month, _trips, _excluded = filter_latest(user_month_raw, trips_raw, drop_latest)
+    user_month, _trips, _excluded = filter_latest(
+        user_month_raw, trips_raw, drop_latest)
     if train_end:
         user_month = user_month[user_month["YearMonth"].le(train_end)].copy()
     latest_month = sorted(user_month["YearMonth"].astype(str).unique())[-1]
@@ -1636,9 +1747,11 @@ def apply_pricing_adjustments(base: dict, submitted: dict) -> dict:
 
 
 def market_size_forecast(user_month: pd.DataFrame, train_months: List[str], future_months: List[str], multiplier: float) -> Dict[str, float]:
-    train = user_month[user_month["YearMonth"].isin(train_months) & user_month["InMarket"].eq(1)].copy()
+    train = user_month[user_month["YearMonth"].isin(
+        train_months) & user_month["InMarket"].eq(1)].copy()
     month_sizes = train.groupby("YearMonth")["UserID"].nunique()
-    train = train.merge(month_sizes.rename("market_size"), left_on="YearMonth", right_index=True, how="left")
+    train = train.merge(month_sizes.rename("market_size"),
+                        left_on="YearMonth", right_index=True, how="left")
     moy_mean = train.groupby("MonthOfYear")["market_size"].mean().to_dict()
     fallback = float(month_sizes.mean())
     return {m: float(moy_mean.get(int(m[-2:]), fallback) * multiplier) for m in future_months}
@@ -1650,7 +1763,8 @@ def predict_counterfactual(
     forecast_panel: pd.DataFrame,
     model_spec: Optional[dict] = None,
 ) -> pd.DataFrame:
-    X = build_design(forecast_panel, model_spec=model_spec, train_months=train_months)
+    X = build_design(forecast_panel, model_spec=model_spec,
+                     train_months=train_months)
     beta = coef.set_index("variable")["coefficient"]
     X = X.reindex(columns=beta.index, fill_value=0.0)
     out = forecast_panel.copy()
@@ -1659,9 +1773,12 @@ def predict_counterfactual(
     denom = out.groupby("YearMonth")["exp_delta_hat"].transform("sum") + 1.0
     out["predicted_share"] = out["exp_delta_hat"] / denom
     out["predicted_count"] = out["market_size"] * out["predicted_share"]
-    out["predicted_trip_count_component"] = out["predicted_count"] * out["expected_trip_count"]
-    out["predicted_trip_revenue_component"] = out["predicted_count"] * out["expected_trip_revenue"]
-    out["predicted_user_payment_component"] = out["predicted_count"] * out["expected_user_payment"]
+    out["predicted_trip_count_component"] = out["predicted_count"] * \
+        out["expected_trip_count"]
+    out["predicted_trip_revenue_component"] = out["predicted_count"] * \
+        out["expected_trip_revenue"]
+    out["predicted_user_payment_component"] = out["predicted_count"] * \
+        out["expected_user_payment"]
     return out
 
 
@@ -1673,15 +1790,18 @@ def summarize_forecast(predicted: pd.DataFrame, label: str) -> pd.DataFrame:
             predicted_positive_users=("predicted_count", "sum"),
             predicted_trips=("predicted_trip_count_component", "sum"),
             predicted_trip_revenue=("predicted_trip_revenue_component", "sum"),
-            predicted_user_payment_revenue=("predicted_user_payment_component", "sum"),
+            predicted_user_payment_revenue=(
+                "predicted_user_payment_component", "sum"),
         )
         .sort_values("YearMonth")
     )
     plan_trip = predicted.assign(
-        plan_group=np.where(predicted["plan"].eq("Free Plan"), "free_plan", "paid_plan")
+        plan_group=np.where(predicted["plan"].eq(
+            "Free Plan"), "free_plan", "paid_plan")
     )
     plan_trip = (
-        plan_trip.groupby(["YearMonth", "plan_group"], as_index=False)["predicted_trip_count_component"]
+        plan_trip.groupby(["YearMonth", "plan_group"], as_index=False)[
+            "predicted_trip_count_component"]
         .sum()
         .pivot(index="YearMonth", columns="plan_group", values="predicted_trip_count_component")
         .reset_index()
@@ -1704,41 +1824,57 @@ def run_what_if(config: dict) -> dict:
     model_spec = model_spec_from_config(config, require_price=True)
     kernel_spec = kernel_spec_from_config(config)
     horizon = int(config.get("horizon_months", 12))
-    market_multiplier = float(config.get("market_multiplier", config.get("market_size_multiplier", 1.0)))
+    market_multiplier = float(config.get(
+        "market_multiplier", config.get("market_size_multiplier", 1.0)))
     user_month_raw, trips_raw = read_inputs(segment)
-    user_month, trips, excluded_latest = filter_latest(user_month_raw, trips_raw, bool(config.get("drop_latest", True)))
+    user_month, trips, excluded_latest = filter_latest(
+        user_month_raw, trips_raw, bool(config.get("drop_latest", True)))
     months = sorted(user_month["YearMonth"].astype(str).unique())
     train_start = config.get("train_start", months[0])
     train_end = config.get("train_end", months[-1])
     train_months = choose_train_months(user_month, train_start, train_end)
-    train_user_month = user_month[user_month["YearMonth"].isin(train_months)].copy()
+    train_user_month = user_month[user_month["YearMonth"].isin(
+        train_months)].copy()
     kernel_user_month_raw, kernel_trips_raw = read_all_inputs()
-    kernel_user_month = kernel_user_month_raw[kernel_user_month_raw["YearMonth"].isin(train_months)].copy()
-    kernel_trips = kernel_trips_raw[kernel_trips_raw["YearMonth"].isin(train_months)].copy()
+    kernel_user_month = kernel_user_month_raw[kernel_user_month_raw["YearMonth"].isin(
+        train_months)].copy()
+    kernel_trips = kernel_trips_raw[kernel_trips_raw["YearMonth"].isin(
+        train_months)].copy()
     train_baskets = build_baskets(kernel_user_month, kernel_trips, bins=bins)
 
-    observed_pricing = latest_pricing(segment, train_end=train_months[-1], drop_latest=bool(config.get("drop_latest", True)))
+    observed_pricing = latest_pricing(
+        segment, train_end=train_months[-1], drop_latest=bool(config.get("drop_latest", True)))
     base_params = observed_pricing["pricing"]
     adjustments = config.get("pricing", {})
     cf_params = {
-        plan: apply_pricing_adjustments(base_params[plan], adjustments.get(plan, {}))
+        plan: apply_pricing_adjustments(
+            base_params[plan], adjustments.get(plan, {}))
         for plan in plans
     }
-    future_start = config.get("forecast_start") or month_add(train_months[-1], 1)
+    future_start = config.get(
+        "forecast_start") or month_add(train_months[-1], 1)
     future_months = [month_add(future_start, i) for i in range(horizon)]
 
-    base_month_pricing = {(m, plan): base_params[plan] for m in future_months for plan in plans}
-    cf_month_pricing = {(m, plan): cf_params[plan] for m in future_months for plan in plans}
-    base_costs, base_diag = expected_costs(train_baskets, segment, base_month_pricing, future_months, plans, kernel_spec=kernel_spec, bins=bins)
-    cf_costs, _cf_diag = expected_costs(train_baskets, segment, cf_month_pricing, future_months, plans, kernel_spec=kernel_spec, bins=bins)
+    base_month_pricing = {
+        (m, plan): base_params[plan] for m in future_months for plan in plans}
+    cf_month_pricing = {(m, plan): cf_params[plan]
+                        for m in future_months for plan in plans}
+    base_costs, base_diag = expected_costs(
+        train_baskets, segment, base_month_pricing, future_months, plans, kernel_spec=kernel_spec, bins=bins)
+    cf_costs, _cf_diag = expected_costs(
+        train_baskets, segment, cf_month_pricing, future_months, plans, kernel_spec=kernel_spec, bins=bins)
 
     train_pricing = build_month_pricing(train_user_month, plans)
-    train_costs, _train_kernel_diag = expected_costs(train_baskets, segment, train_pricing, train_months, plans, kernel_spec=kernel_spec, bins=bins)
-    train_panel = build_share_panel(train_user_month, train_costs, plans, train_months, bins=bins)
+    train_costs, _train_kernel_diag = expected_costs(
+        train_baskets, segment, train_pricing, train_months, plans, kernel_spec=kernel_spec, bins=bins)
+    train_panel = build_share_panel(
+        train_user_month, train_costs, plans, train_months, bins=bins)
     include_price = bool(model_spec.get("include_price", True))
-    _train_pred, coef, train_r2 = estimate_predict(train_panel, train_months, include_price=include_price, model_spec=model_spec)
+    _train_pred, coef, train_r2 = estimate_predict(
+        train_panel, train_months, include_price=include_price, model_spec=model_spec)
 
-    market_sizes = market_size_forecast(user_month, train_months, future_months, market_multiplier)
+    market_sizes = market_size_forecast(
+        user_month, train_months, future_months, market_multiplier)
     empty_future_um = pd.DataFrame(
         {
             "YearMonth": future_months,
@@ -1749,16 +1885,22 @@ def run_what_if(config: dict) -> dict:
             "PlanUsedThisMonth": "",
         }
     )
-    base_panel = build_share_panel(empty_future_um, base_costs, plans, future_months, market_sizes, bins=bins)
-    cf_panel = build_share_panel(empty_future_um, cf_costs, plans, future_months, market_sizes, bins=bins)
-    base_pred = predict_counterfactual(coef, train_months, base_panel, model_spec=model_spec)
-    cf_pred = predict_counterfactual(coef, train_months, cf_panel, model_spec=model_spec)
+    base_panel = build_share_panel(
+        empty_future_um, base_costs, plans, future_months, market_sizes, bins=bins)
+    cf_panel = build_share_panel(
+        empty_future_um, cf_costs, plans, future_months, market_sizes, bins=bins)
+    base_pred = predict_counterfactual(
+        coef, train_months, base_panel, model_spec=model_spec)
+    cf_pred = predict_counterfactual(
+        coef, train_months, cf_panel, model_spec=model_spec)
 
-    monthly = pd.concat([summarize_forecast(base_pred, "Current pricing"), summarize_forecast(cf_pred, "What-if pricing")], ignore_index=True)
+    monthly = pd.concat([summarize_forecast(base_pred, "Current pricing"),
+                        summarize_forecast(cf_pred, "What-if pricing")], ignore_index=True)
     totals = (
         monthly.groupby("scenario", as_index=False)
         .agg(
-            total_user_payment_revenue=("predicted_user_payment_revenue", "sum"),
+            total_user_payment_revenue=(
+                "predicted_user_payment_revenue", "sum"),
             total_trip_revenue=("predicted_trip_revenue", "sum"),
             avg_positive_users=("predicted_positive_users", "mean"),
             avg_predicted_trips=("predicted_trips", "mean"),
@@ -1770,7 +1912,8 @@ def run_what_if(config: dict) -> dict:
         .agg(
             current_positive_users=("predicted_count", "mean"),
             current_predicted_trips=("predicted_trip_count_component", "mean"),
-            current_user_payment_revenue=("predicted_user_payment_component", "mean"),
+            current_user_payment_revenue=(
+                "predicted_user_payment_component", "mean"),
             current_expected_trip_count=("expected_trip_count", "mean"),
             current_expected_user_payment=("expected_user_payment", "mean"),
         )
@@ -1780,21 +1923,29 @@ def run_what_if(config: dict) -> dict:
         .agg(
             what_if_positive_users=("predicted_count", "mean"),
             what_if_predicted_trips=("predicted_trip_count_component", "mean"),
-            what_if_user_payment_revenue=("predicted_user_payment_component", "mean"),
+            what_if_user_payment_revenue=(
+                "predicted_user_payment_component", "mean"),
             what_if_expected_trip_count=("expected_trip_count", "mean"),
             what_if_expected_user_payment=("expected_user_payment", "mean"),
         )
     )
-    product_summary = base_product.merge(cf_product, on=["plan", "count_bin", "product"], how="outer").fillna(0.0)
-    product_summary["change_positive_users"] = product_summary["what_if_positive_users"] - product_summary["current_positive_users"]
-    product_summary["change_predicted_trips"] = product_summary["what_if_predicted_trips"] - product_summary["current_predicted_trips"]
-    product_summary["change_user_payment_revenue"] = product_summary["what_if_user_payment_revenue"] - product_summary["current_user_payment_revenue"]
-    product_summary["bin_sort"] = product_summary["count_bin"].map(lambda value: bin_sort_value(value, bins))
+    product_summary = base_product.merge(
+        cf_product, on=["plan", "count_bin", "product"], how="outer").fillna(0.0)
+    product_summary["change_positive_users"] = product_summary["what_if_positive_users"] - \
+        product_summary["current_positive_users"]
+    product_summary["change_predicted_trips"] = product_summary["what_if_predicted_trips"] - \
+        product_summary["current_predicted_trips"]
+    product_summary["change_user_payment_revenue"] = product_summary["what_if_user_payment_revenue"] - \
+        product_summary["current_user_payment_revenue"]
+    product_summary["bin_sort"] = product_summary["count_bin"].map(
+        lambda value: bin_sort_value(value, bins))
     product_summary = add_forecast_outside_row(product_summary, monthly)
     product_summary = product_summary.sort_values(["plan", "bin_sort"])
     price_coef, price_p = coefficient_value(coef, "expected_user_payment")
-    warning_rows = warnings_from_model(price_coef, price_p, [], include_price=include_price)
-    warning_rows.extend(warnings_from_kernel(base_diag, kernel_spec.get("min_support", MIN_SUPPORT)))
+    warning_rows = warnings_from_model(
+        price_coef, price_p, [], include_price=include_price)
+    warning_rows.extend(warnings_from_kernel(
+        base_diag, kernel_spec.get("min_support", MIN_SUPPORT)))
     return json_safe(
         {
             "config": {
@@ -1887,8 +2038,10 @@ def make_forecast_template(
         for plan in plans:
             for count_bin in [b.label for b in bins]:
                 product = product_name(plan, count_bin)
-                source, source_label, condition_flags = choose_kernel_source(train_baskets, segment, plan, count_bin, month, kernel_spec)
-                source_key = kernel_cache_key(segment, plan, count_bin, month, condition_flags)
+                source, source_label, condition_flags = choose_kernel_source(
+                    train_baskets, segment, plan, count_bin, month, kernel_spec)
+                source_key = kernel_cache_key(
+                    segment, plan, count_bin, month, condition_flags)
                 if source_key not in source_cache:
                     source_cache[source_key] = fast_source_from_baskets(source)
                     source_index[source_key] = len(sources)
@@ -1908,7 +2061,8 @@ def make_forecast_template(
                         "source_baskets": int(len(source)),
                     }
                 )
-                kernel_details.append(kernel_detail_row(month, product, plan, count_bin, source_label, source, condition_flags, payload_cache[source_key]))
+                kernel_details.append(kernel_detail_row(
+                    month, product, plan, count_bin, source_label, source, condition_flags, payload_cache[source_key]))
     template = pd.DataFrame(rows)
     utility_without_price, price_slope = utility_parts_for_counterfactual(
         template.assign(expected_user_payment=0.0),
@@ -1918,8 +2072,10 @@ def make_forecast_template(
     )
     month_labels = sorted(template["YearMonth"].astype(str).unique())
     month_index_map = {month: i for i, month in enumerate(month_labels)}
-    month_index = template["YearMonth"].map(month_index_map).to_numpy(dtype=int)
-    month_market_size = np.asarray([float(market_sizes[m]) for m in month_labels], dtype=float)
+    month_index = template["YearMonth"].map(
+        month_index_map).to_numpy(dtype=int)
+    month_market_size = np.asarray(
+        [float(market_sizes[m]) for m in month_labels], dtype=float)
     return FastForecastContext(
         template=template,
         sources=sources,
@@ -1940,8 +2096,10 @@ def fast_price_source(source: FastKernelSource, params: dict) -> Tuple[float, fl
     if source.n_baskets == 0:
         return 0.0, 0.0, 0.0
     charges = price_trip_array(source.durations, source.distances, params)
-    trip_sums = np.bincount(source.basket_ids, weights=charges, minlength=source.n_baskets)
-    user_payments = float(params["monthly_fee"]) + np.maximum(0.0, trip_sums - float(params["monthly_credit"]))
+    trip_sums = np.bincount(
+        source.basket_ids, weights=charges, minlength=source.n_baskets)
+    user_payments = float(params["monthly_fee"]) + np.maximum(0.0,
+                                                              trip_sums - float(params["monthly_credit"]))
     return (
         float(np.mean(source.trip_counts)),
         float(np.mean(trip_sums)),
@@ -1955,21 +2113,25 @@ def evaluate_forecast_context(context: FastForecastContext, params_by_plan: Dict
     expected_trip_count = np.zeros(n_rows, dtype=float)
     expected_trip_revenue = np.zeros(n_rows, dtype=float)
     expected_user_payment = np.zeros(n_rows, dtype=float)
-    price_cache: Dict[Tuple[int, Tuple[float, ...]], Tuple[float, float, float]] = {}
+    price_cache: Dict[Tuple[int, Tuple[float, ...]],
+                      Tuple[float, float, float]] = {}
     for i, row in enumerate(context.template.itertuples(index=False)):
         params = params_by_plan[row.plan]
         source_id = int(context.source_ids[i])
         cache_key = (source_id, pricing_signature(params))
         if cache_key not in price_cache:
-            price_cache[cache_key] = fast_price_source(context.sources[source_id], params)
+            price_cache[cache_key] = fast_price_source(
+                context.sources[source_id], params)
         trip_count, trip_revenue, user_payment = price_cache[cache_key]
         expected_trip_count[i] = trip_count
         expected_trip_revenue[i] = trip_revenue
         expected_user_payment[i] = user_payment
 
-    utility = context.utility_without_price + context.price_slope * expected_user_payment
+    utility = context.utility_without_price + \
+        context.price_slope * expected_user_payment
     exp_utility = np.exp(np.clip(utility, -50, 50))
-    inside_sum = np.bincount(context.month_index, weights=exp_utility, minlength=len(context.month_labels))
+    inside_sum = np.bincount(
+        context.month_index, weights=exp_utility, minlength=len(context.month_labels))
     denom = inside_sum + 1.0
     predicted_share = exp_utility / denom[context.month_index]
     market_size = context.month_market_size[context.month_index]
@@ -1978,8 +2140,10 @@ def evaluate_forecast_context(context: FastForecastContext, params_by_plan: Dict
     user_revenue_component = predicted_count * expected_user_payment
     trip_revenue_component = predicted_count * expected_trip_revenue
 
-    monthly_inside = np.bincount(context.month_index, weights=predicted_count, minlength=len(context.month_labels))
-    monthly_trips = np.bincount(context.month_index, weights=trip_count_component, minlength=len(context.month_labels))
+    monthly_inside = np.bincount(
+        context.month_index, weights=predicted_count, minlength=len(context.month_labels))
+    monthly_trips = np.bincount(
+        context.month_index, weights=trip_count_component, minlength=len(context.month_labels))
     monthly_free_trips = np.bincount(
         context.month_index[context.plan_is_free],
         weights=trip_count_component[context.plan_is_free],
@@ -1990,8 +2154,10 @@ def evaluate_forecast_context(context: FastForecastContext, params_by_plan: Dict
         weights=trip_count_component[~context.plan_is_free],
         minlength=len(context.month_labels),
     )
-    monthly_user_revenue = np.bincount(context.month_index, weights=user_revenue_component, minlength=len(context.month_labels))
-    monthly_trip_revenue = np.bincount(context.month_index, weights=trip_revenue_component, minlength=len(context.month_labels))
+    monthly_user_revenue = np.bincount(
+        context.month_index, weights=user_revenue_component, minlength=len(context.month_labels))
+    monthly_trip_revenue = np.bincount(
+        context.month_index, weights=trip_revenue_component, minlength=len(context.month_labels))
     monthly = pd.DataFrame(
         {
             "YearMonth": context.month_labels,
@@ -2007,18 +2173,21 @@ def evaluate_forecast_context(context: FastForecastContext, params_by_plan: Dict
         }
     )
 
-    product = context.template[["plan", "count_bin", "product", "bin_sort"]].copy()
+    product = context.template[[
+        "plan", "count_bin", "product", "bin_sort"]].copy()
     product["predicted_count"] = predicted_count
     product["predicted_trips"] = trip_count_component
     product["predicted_user_payment_revenue"] = user_revenue_component
     product["expected_trip_count"] = expected_trip_count
     product["expected_user_payment"] = expected_user_payment
     product_summary = (
-        product.groupby(["plan", "count_bin", "product", "bin_sort"], as_index=False)
+        product.groupby(["plan", "count_bin", "product",
+                        "bin_sort"], as_index=False)
         .agg(
             predicted_count=("predicted_count", "mean"),
             predicted_trips=("predicted_trips", "mean"),
-            predicted_user_payment_revenue=("predicted_user_payment_revenue", "mean"),
+            predicted_user_payment_revenue=(
+                "predicted_user_payment_revenue", "mean"),
             expected_trip_count=("expected_trip_count", "mean"),
             expected_user_payment=("expected_user_payment", "mean"),
         )
@@ -2039,7 +2208,8 @@ def evaluate_forecast_context(context: FastForecastContext, params_by_plan: Dict
             }
         ]
     )
-    product_summary = pd.concat([no_use_row, product_summary], ignore_index=True, sort=False)
+    product_summary = pd.concat(
+        [no_use_row, product_summary], ignore_index=True, sort=False)
     return {
         "label": label,
         "monthly": monthly,
@@ -2083,15 +2253,18 @@ def selected_optimization_variables(config: dict, base_params: Dict[str, dict], 
                 raw = raw_by_key.get((plan, param), {})
                 current = float(base_params[plan][param])
                 if current <= 0:
-                    raise ValueError(f"Cannot tie time rates for {plan}: {param} has non-positive current value.")
+                    raise ValueError(
+                        f"Cannot tie time rates for {plan}: {param} has non-positive current value.")
                 lower = float(raw.get("lower", current))
                 upper = float(raw.get("upper", current))
                 if upper < lower:
-                    raise ValueError(f"Upper bound is below lower bound for {plan} {param}")
+                    raise ValueError(
+                        f"Upper bound is below lower bound for {plan} {param}")
                 lower_mults.append(lower / current)
                 upper_mults.append(upper / current)
                 targets.append({"plan": plan, "param": param, "base": current})
-                source_bounds[param] = {"lower": lower, "upper": upper, "current": current}
+                source_bounds[param] = {"lower": lower,
+                                        "upper": upper, "current": current}
             lower = max(lower_mults)
             upper = min(upper_mults)
             if upper < lower:
@@ -2133,7 +2306,8 @@ def selected_optimization_variables(config: dict, base_params: Dict[str, dict], 
         if not np.isfinite(lower) or not np.isfinite(upper):
             raise ValueError(f"Non-finite bounds for {plan} {param}")
         if upper < lower:
-            raise ValueError(f"Upper bound is below lower bound for {plan} {param}")
+            raise ValueError(
+                f"Upper bound is below lower bound for {plan} {param}")
         current = float(base_params[plan][param])
         item = {
             "kind": "single",
@@ -2160,10 +2334,12 @@ def params_from_vector(
     vector: np.ndarray,
 ) -> Dict[str, dict]:
     params = {plan: dict(values) for plan, values in base_params.items()}
+
     def apply_value(var: dict, value: float) -> None:
         if var.get("kind") == "time_multiplier":
             for target in var["targets"]:
-                params[target["plan"]][target["param"]] = float(target["base"]) * float(value)
+                params[target["plan"]][target["param"]] = float(
+                    target["base"]) * float(value)
         else:
             params[var["plan"]][var["param"]] = float(value)
 
@@ -2179,7 +2355,8 @@ def latin_hypercube(n_points: int, n_dim: int, rng: np.random.Generator) -> np.n
         return np.empty((0, n_dim))
     out = np.zeros((n_points, n_dim), dtype=float)
     for j in range(n_dim):
-        out[:, j] = (rng.permutation(n_points) + rng.random(n_points)) / n_points
+        out[:, j] = (rng.permutation(n_points) +
+                     rng.random(n_points)) / n_points
     return out
 
 
@@ -2188,8 +2365,10 @@ def constraint_status(result: dict, min_total_demand: float, min_monthly_demand:
     total_violation = max(0.0, float(min_total_demand) - demand)
     monthly_violation = 0.0
     if min_monthly_demand is not None:
-        monthly_demand = result["monthly"]["predicted_trips"].to_numpy(dtype=float)
-        monthly_violation = float(np.maximum(0.0, min_monthly_demand - monthly_demand).max())
+        monthly_demand = result["monthly"]["predicted_trips"].to_numpy(
+            dtype=float)
+        monthly_violation = float(np.maximum(
+            0.0, min_monthly_demand - monthly_demand).max())
     return total_violation <= 1e-8 and monthly_violation <= 1e-8, total_violation, monthly_violation
 
 
@@ -2200,10 +2379,12 @@ def penalized_score(
     min_monthly_demand: Optional[np.ndarray] = None,
 ) -> float:
     revenue = float(result["total_user_payment_revenue"])
-    feasible, total_violation, monthly_violation = constraint_status(result, min_total_demand, min_monthly_demand)
+    feasible, total_violation, monthly_violation = constraint_status(
+        result, min_total_demand, min_monthly_demand)
     if feasible:
         return revenue
-    penalty_per_user = max(abs(baseline_revenue) / max(min_total_demand, 1.0), 1.0) * 10.0
+    penalty_per_user = max(abs(baseline_revenue) /
+                           max(min_total_demand, 1.0), 1.0) * 10.0
     return revenue - penalty_per_user * (total_violation + monthly_violation)
 
 
@@ -2220,10 +2401,13 @@ def make_evaluation_record(
     min_monthly_demand: Optional[np.ndarray],
     baseline_revenue: float,
 ) -> dict:
-    params = params_from_vector(base_params, opt_variables, fixed_overrides, vector)
+    params = params_from_vector(
+        base_params, opt_variables, fixed_overrides, vector)
     result = evaluate_forecast_context(context, params, "Optimized pricing")
-    feasible, total_violation, monthly_violation = constraint_status(result, min_total_demand, min_monthly_demand)
-    score = penalized_score(result, min_total_demand, baseline_revenue, min_monthly_demand)
+    feasible, total_violation, monthly_violation = constraint_status(
+        result, min_total_demand, min_monthly_demand)
+    score = penalized_score(result, min_total_demand,
+                            baseline_revenue, min_monthly_demand)
     return {
         "phase": phase,
         "run_id": run_id,
@@ -2285,7 +2469,8 @@ def optimize_vectors(
         if best_penalized is None or record["score"] > best_penalized["score"]:
             best_penalized = record
         if progress_callback is not None:
-            progress_callback(record, len(evaluations), max_evaluations, run_id)
+            progress_callback(record, len(evaluations),
+                              max_evaluations, run_id)
         return record
 
     if len(opt_variables) == 0:
@@ -2299,7 +2484,8 @@ def optimize_vectors(
         if len(evaluations) < max_evaluations:
             evaluate_vector(vector, "start")
 
-    n_global = max(0, min(max_evaluations - len(evaluations), int(max_evaluations * 0.7)))
+    n_global = max(0, min(max_evaluations - len(evaluations),
+                   int(max_evaluations * 0.7)))
     unit = latin_hypercube(n_global, len(opt_variables), rng)
     for row in unit:
         vector = lower + row * (upper - lower)
@@ -2320,7 +2506,8 @@ def optimize_vectors(
                 if len(evaluations) >= max_evaluations:
                     break
                 trial = base_vector.copy()
-                trial[j] = np.clip(trial[j] + direction * step[j], lower[j], upper[j])
+                trial[j] = np.clip(trial[j] + direction *
+                                   step[j], lower[j], upper[j])
                 if np.allclose(trial, base_vector):
                     continue
                 record = evaluate_vector(trial, "local")
@@ -2347,7 +2534,8 @@ def round_vector(vector: np.ndarray, opt_variables: List[dict]) -> np.ndarray:
         step = variable_step(var)
         if step > 0:
             rounded[i] = round(rounded[i] / step) * step
-        rounded[i] = float(np.clip(rounded[i], float(var["lower"]), float(var["upper"])))
+        rounded[i] = float(np.clip(rounded[i], float(
+            var["lower"]), float(var["upper"])))
     return rounded
 
 
@@ -2409,7 +2597,8 @@ def try_scipy_polish(
         return -cached_eval(x)["revenue"]
 
     constraints = [
-        {"type": "ineq", "fun": lambda x: cached_eval(x)["demand"] - min_total_demand}
+        {"type": "ineq", "fun": lambda x: cached_eval(
+            x)["demand"] - min_total_demand}
     ]
     if min_monthly_demand is not None:
         for idx in range(len(min_monthly_demand)):
@@ -2458,7 +2647,8 @@ def run_local_sensitivity(
         step = variable_step(var)
         for direction, sign in [("up", 1.0), ("down", -1.0)]:
             trial = np.asarray(final_vector, dtype=float).copy()
-            trial[idx] = float(np.clip(trial[idx] + sign * step, float(var["lower"]), float(var["upper"])))
+            trial[idx] = float(np.clip(trial[idx] + sign *
+                               step, float(var["lower"]), float(var["upper"])))
             if np.isclose(trial[idx], final_vector[idx]):
                 continue
             record = make_evaluation_record(
@@ -2517,11 +2707,13 @@ def convergence_rows(evaluations: List[dict], baseline_revenue: float, max_rows:
 
 def run_diagnostics(evaluations: List[dict], baseline_revenue: float, baseline_demand: float) -> List[dict]:
     rows = []
-    run_ids = sorted({int(e["run_id"]) for e in evaluations if int(e.get("run_id", 0)) > 0})
+    run_ids = sorted({int(e["run_id"])
+                     for e in evaluations if int(e.get("run_id", 0)) > 0})
     for run_id in run_ids:
         items = [e for e in evaluations if int(e.get("run_id", 0)) == run_id]
         feasible = [e for e in items if e["feasible"]]
-        best = max(feasible, key=lambda e: e["revenue"]) if feasible else max(items, key=lambda e: e["score"])
+        best = max(feasible, key=lambda e: e["revenue"]) if feasible else max(
+            items, key=lambda e: e["score"])
         phases = {str(item.get("phase", "")) for item in items}
         if "scipy" in phases:
             stage = "SciPy polish"
@@ -2611,9 +2803,12 @@ def combine_optimization_product_summary(baseline: dict, optimized: dict) -> pd.
     )
     keep = ["plan", "count_bin", "product", "bin_sort"]
     product = base.merge(opt, on=keep, how="outer").fillna(0.0)
-    product["change_positive_users"] = product["optimized_positive_users"] - product["baseline_positive_users"]
-    product["change_predicted_trips"] = product["optimized_predicted_trips"] - product["baseline_predicted_trips"]
-    product["change_user_payment_revenue"] = product["optimized_user_payment_revenue"] - product["baseline_user_payment_revenue"]
+    product["change_positive_users"] = product["optimized_positive_users"] - \
+        product["baseline_positive_users"]
+    product["change_predicted_trips"] = product["optimized_predicted_trips"] - \
+        product["baseline_predicted_trips"]
+    product["change_user_payment_revenue"] = product["optimized_user_payment_revenue"] - \
+        product["baseline_user_payment_revenue"]
     return product.sort_values(["plan", "bin_sort"])
 
 
@@ -2626,7 +2821,8 @@ def run_optimization(config: dict, progress_callback: Optional[Callable[[dict], 
     model_spec = model_spec_from_config(config, require_price=True)
     kernel_spec = kernel_spec_from_config(config)
     horizon = int(config.get("horizon_months", 12))
-    market_multiplier = float(config.get("market_multiplier", config.get("market_size_multiplier", 1.0)))
+    market_multiplier = float(config.get(
+        "market_multiplier", config.get("market_size_multiplier", 1.0)))
     max_demand_drop = float(config.get("max_demand_drop", 0.05))
     max_demand_drop = max(0.0, min(max_demand_drop, 1.0))
     max_evaluations = int(config.get("max_evaluations", 500))
@@ -2657,37 +2853,52 @@ def run_optimization(config: dict, progress_callback: Optional[Callable[[dict], 
     emit_progress("setup", phase="Reading data")
 
     user_month_raw, trips_raw = read_inputs(segment)
-    user_month, trips, excluded_latest = filter_latest(user_month_raw, trips_raw, bool(config.get("drop_latest", True)))
+    user_month, trips, excluded_latest = filter_latest(
+        user_month_raw, trips_raw, bool(config.get("drop_latest", True)))
     months = sorted(user_month["YearMonth"].astype(str).unique())
     train_start = config.get("train_start", months[0])
     train_end = config.get("train_end", months[-1])
     train_months = choose_train_months(user_month, train_start, train_end)
-    train_user_month = user_month[user_month["YearMonth"].isin(train_months)].copy()
+    train_user_month = user_month[user_month["YearMonth"].isin(
+        train_months)].copy()
     kernel_user_month_raw, kernel_trips_raw = read_all_inputs()
-    kernel_user_month = kernel_user_month_raw[kernel_user_month_raw["YearMonth"].isin(train_months)].copy()
-    kernel_trips = kernel_trips_raw[kernel_trips_raw["YearMonth"].isin(train_months)].copy()
+    kernel_user_month = kernel_user_month_raw[kernel_user_month_raw["YearMonth"].isin(
+        train_months)].copy()
+    kernel_trips = kernel_trips_raw[kernel_trips_raw["YearMonth"].isin(
+        train_months)].copy()
     train_baskets = build_baskets(kernel_user_month, kernel_trips, bins=bins)
 
-    observed_pricing = latest_pricing(segment, train_end=train_months[-1], drop_latest=bool(config.get("drop_latest", True)))
+    observed_pricing = latest_pricing(
+        segment, train_end=train_months[-1], drop_latest=bool(config.get("drop_latest", True)))
     base_params = observed_pricing["pricing"]
-    opt_variables, fixed_overrides = selected_optimization_variables(config, base_params, plans)
+    opt_variables, fixed_overrides = selected_optimization_variables(
+        config, base_params, plans)
 
-    future_start = config.get("forecast_start") or month_add(train_months[-1], 1)
+    future_start = config.get(
+        "forecast_start") or month_add(train_months[-1], 1)
     future_months = [month_add(future_start, i) for i in range(horizon)]
     emit_progress("setup", phase="Estimating demand model")
     train_pricing = build_month_pricing(train_user_month, plans)
-    train_costs, _train_kernel_diag = expected_costs(train_baskets, segment, train_pricing, train_months, plans, kernel_spec=kernel_spec, bins=bins)
-    train_panel = build_share_panel(train_user_month, train_costs, plans, train_months, bins=bins)
+    train_costs, _train_kernel_diag = expected_costs(
+        train_baskets, segment, train_pricing, train_months, plans, kernel_spec=kernel_spec, bins=bins)
+    train_panel = build_share_panel(
+        train_user_month, train_costs, plans, train_months, bins=bins)
     include_price = bool(model_spec.get("include_price", True))
-    _train_pred, coef, train_r2 = estimate_predict(train_panel, train_months, include_price=include_price, model_spec=model_spec)
+    _train_pred, coef, train_r2 = estimate_predict(
+        train_panel, train_months, include_price=include_price, model_spec=model_spec)
     emit_progress("setup", phase="Building forecast kernels")
-    market_sizes = market_size_forecast(user_month, train_months, future_months, market_multiplier)
-    context = make_forecast_template(train_baskets, segment, future_months, plans, market_sizes, coef, train_months, model_spec=model_spec, kernel_spec=kernel_spec, bins=bins)
-    baseline = evaluate_forecast_context(context, base_params, "Baseline pricing")
-    min_allowed_demand = baseline["total_predicted_trips"] * (1.0 - max_demand_drop)
+    market_sizes = market_size_forecast(
+        user_month, train_months, future_months, market_multiplier)
+    context = make_forecast_template(train_baskets, segment, future_months, plans, market_sizes,
+                                     coef, train_months, model_spec=model_spec, kernel_spec=kernel_spec, bins=bins)
+    baseline = evaluate_forecast_context(
+        context, base_params, "Baseline pricing")
+    min_allowed_demand = baseline["total_predicted_trips"] * \
+        (1.0 - max_demand_drop)
     min_monthly_demand = None
     if enforce_monthly_demand:
-        min_monthly_demand = baseline["monthly"]["predicted_trips"].to_numpy(dtype=float) * (1.0 - max_demand_drop)
+        min_monthly_demand = baseline["monthly"]["predicted_trips"].to_numpy(
+            dtype=float) * (1.0 - max_demand_drop)
 
     all_evaluations: List[dict] = []
     best_record = None
@@ -2708,7 +2919,8 @@ def run_optimization(config: dict, progress_callback: Optional[Callable[[dict], 
             best_feasible=bool(record.get("feasible")),
         )
 
-    emit_progress("direct_search", phase="Starting direct search", current_run=1 if num_seeds else 0)
+    emit_progress("direct_search", phase="Starting direct search",
+                  current_run=1 if num_seeds else 0)
     for run_idx in range(num_seeds):
         run_seed = seed + run_idx
         run_best, run_evaluations = optimize_vectors(
@@ -2727,9 +2939,11 @@ def run_optimization(config: dict, progress_callback: Optional[Callable[[dict], 
         all_evaluations.extend(run_evaluations)
         best_record = choose_better_record(best_record, run_best)
 
-    scipy_status = {"available": False, "used": False, "message": "SciPy polish not requested."}
+    scipy_status = {"available": False, "used": False,
+                    "message": "SciPy polish not requested."}
     if use_scipy_polish and best_record is not None:
-        emit_progress("scipy", phase="SciPy polish", current_run=num_seeds + 1, current_seed=seed + num_seeds)
+        emit_progress("scipy", phase="SciPy polish",
+                      current_run=num_seeds + 1, current_seed=seed + num_seeds)
         scipy_record, scipy_status = try_scipy_polish(
             context,
             base_params,
@@ -2745,10 +2959,12 @@ def run_optimization(config: dict, progress_callback: Optional[Callable[[dict], 
         if scipy_record is not None:
             all_evaluations.append(scipy_record)
             best_record = choose_better_record(best_record, scipy_record)
-        emit_progress("scipy", phase="SciPy polish complete", scipy=scipy_status)
+        emit_progress("scipy", phase="SciPy polish complete",
+                      scipy=scipy_status)
 
     if best_record is None:
-        raise ValueError("Optimization failed before evaluating any candidate.")
+        raise ValueError(
+            "Optimization failed before evaluating any candidate.")
 
     continuous_record = best_record
     rounded_record = None
@@ -2760,7 +2976,8 @@ def run_optimization(config: dict, progress_callback: Optional[Callable[[dict], 
         "message": "Rounding was not requested.",
     }
     if round_solution and len(opt_variables) > 0:
-        rounded_vector = round_vector(continuous_record["vector"], opt_variables)
+        rounded_vector = round_vector(
+            continuous_record["vector"], opt_variables)
         rounded_record = make_evaluation_record(
             context,
             base_params,
@@ -2793,11 +3010,14 @@ def run_optimization(config: dict, progress_callback: Optional[Callable[[dict], 
 
     optimized_params = final_record["params"]
     optimized = final_record["result"]
-    monthly = pd.concat([baseline["monthly"], optimized["monthly"]], ignore_index=True)
+    monthly = pd.concat(
+        [baseline["monthly"], optimized["monthly"]], ignore_index=True)
     product_summary = combine_optimization_product_summary(baseline, optimized)
     price_coef, price_p = coefficient_value(coef, "expected_user_payment")
-    warnings = warnings_from_model(price_coef, price_p, [], include_price=include_price)
-    warnings.extend(warnings_from_kernel(pd.DataFrame(context.kernel_details), kernel_spec.get("min_support", MIN_SUPPORT)))
+    warnings = warnings_from_model(
+        price_coef, price_p, [], include_price=include_price)
+    warnings.extend(warnings_from_kernel(pd.DataFrame(
+        context.kernel_details), kernel_spec.get("min_support", MIN_SUPPORT)))
     if not final_record["feasible"]:
         warnings.append(
             {
@@ -2806,22 +3026,32 @@ def run_optimization(config: dict, progress_callback: Optional[Callable[[dict], 
             }
         )
     if round_solution and rounded_record is not None and not rounded_record["feasible"]:
-        warnings.append({"level": "warn", "message": rounding_status["message"]})
+        warnings.append(
+            {"level": "warn", "message": rounding_status["message"]})
     if enforce_monthly_demand:
-        warnings.append({"level": "good", "message": "Trip-volume drop constraint is enforced separately in every forecast month."})
+        warnings.append(
+            {"level": "good", "message": "Trip-volume drop constraint is enforced separately in every forecast month."})
     if scipy_status.get("used") and scipy_status.get("available"):
         level = "good" if scipy_status.get("success") else "warn"
-        warnings.append({"level": level, "message": f"SciPy polish: {scipy_status.get('message')}"})
+        warnings.append(
+            {"level": level, "message": f"SciPy polish: {scipy_status.get('message')}"})
     feasible_count = int(sum(1 for e in all_evaluations if e["feasible"]))
-    revenue_lift = optimized["total_user_payment_revenue"] - baseline["total_user_payment_revenue"]
-    demand_change = optimized["total_predicted_trips"] - baseline["total_predicted_trips"]
-    demand_drop_fraction = -demand_change / baseline["total_predicted_trips"] if baseline["total_predicted_trips"] else 0.0
+    revenue_lift = optimized["total_user_payment_revenue"] - \
+        baseline["total_user_payment_revenue"]
+    demand_change = optimized["total_predicted_trips"] - \
+        baseline["total_predicted_trips"]
+    demand_drop_fraction = -demand_change / \
+        baseline["total_predicted_trips"] if baseline["total_predicted_trips"] else 0.0
     baseline_monthly = baseline["monthly"]
     optimized_monthly = optimized["monthly"]
-    baseline_free_trips = float(baseline_monthly["predicted_free_plan_trips"].sum())
-    optimized_free_trips = float(optimized_monthly["predicted_free_plan_trips"].sum())
-    baseline_paid_trips = float(baseline_monthly["predicted_paid_plan_trips"].sum())
-    optimized_paid_trips = float(optimized_monthly["predicted_paid_plan_trips"].sum())
+    baseline_free_trips = float(
+        baseline_monthly["predicted_free_plan_trips"].sum())
+    optimized_free_trips = float(
+        optimized_monthly["predicted_free_plan_trips"].sum())
+    baseline_paid_trips = float(
+        baseline_monthly["predicted_paid_plan_trips"].sum())
+    optimized_paid_trips = float(
+        optimized_monthly["predicted_paid_plan_trips"].sum())
     horizon_count = max(len(future_months), 1)
     sensitivity_rows = run_local_sensitivity(
         context,
