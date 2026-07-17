@@ -74,6 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindForms();
   lockCountKernelControls();
   setDefaultKernelControls();
+  bindAdvancedParamsToggles();
   try {
     await loadOptions();
   } catch (error) {
@@ -111,6 +112,18 @@ function setDefaultKernelControls() {
     ["Segment", "Plan", "Month"].forEach((suffix) => {
       const input = document.getElementById(`${prefix}Kernel${suffix}`);
       if (input) input.checked = false;
+    });
+  });
+}
+
+function bindAdvancedParamsToggles() {
+  ["val", "what", "opt"].forEach((prefix) => {
+    const checkbox = document.getElementById(`${prefix}ShowAdvanced`);
+    const panel = document.getElementById(`${prefix}AdvancedParams`);
+    if (!checkbox || !panel) return;
+    panel.style.display = checkbox.checked ? "" : "none";
+    checkbox.addEventListener("change", () => {
+      panel.style.display = checkbox.checked ? "" : "none";
     });
   });
 }

@@ -22,7 +22,7 @@
       <button class="tab" data-tab="optimization">Optimization</button>
     </nav>
 
-    <!-- Model-validation workflow: estimate on training months and compare to observed testing months. -->
+  <!-- Model-validation workflow: estimate on training months and compare to observed testing months. -->
     <section id="validation" class="panel active">
       <div class="control-grid">
         <label>Segment
@@ -45,34 +45,43 @@
           Exclude latest incomplete month
         </label>
       </div>
-      <fieldset class="model-spec-controls">
-        <legend>Model specification</legend>
-        <p class="field-help wide-field">Choose deterministic utility terms. Expected payment is the price variable; fixed effects absorb average preferences for count bins, plans, and calendar season.</p>
+
+      <fieldset class="advanced-params-toggle">
         <label class="check">
-          <input id="valSpecPrice" type="checkbox" checked>
-          Expected payment coefficient
-        </label>
-        <label class="check">
-          <input id="valSpecIntercept" type="checkbox" checked>
-          Intercept
-        </label>
-        <label class="check">
-          <input id="valSpecCountFe" type="checkbox" checked>
-          Count-bin fixed effects
-        </label>
-        <label class="check">
-          <input id="valSpecPlanFe" type="checkbox" checked>
-          Plan fixed effects
-        </label>
-        <label class="check">
-          <input id="valSpecMonthFe" type="checkbox" checked>
-          Month-of-year fixed effects
+          <input id="valShowAdvanced" type="checkbox">
+          Show additional model parameters
         </label>
       </fieldset>
-      <fieldset class="bin-spec-controls">
-        <legend>Product trip-count bins</legend>
-        <label class="wide-field">One bin per line
-          <textarea id="valBinSpec" rows="6">01
+
+      <div id="valAdvancedParams" style="display: none;">
+        <fieldset class="model-spec-controls">
+          <legend>Model specification</legend>
+          <p class="field-help wide-field">Choose deterministic utility terms. Expected payment is the price variable; fixed effects absorb average preferences for count bins, plans, and calendar season.</p>
+          <label class="check">
+            <input id="valSpecPrice" type="checkbox" checked>
+            Expected payment coefficient
+          </label>
+          <label class="check">
+            <input id="valSpecIntercept" type="checkbox" checked>
+            Intercept
+          </label>
+          <label class="check">
+            <input id="valSpecCountFe" type="checkbox" checked>
+            Count-bin fixed effects
+          </label>
+          <label class="check">
+            <input id="valSpecPlanFe" type="checkbox" checked>
+            Plan fixed effects
+          </label>
+          <label class="check">
+            <input id="valSpecMonthFe" type="checkbox" checked>
+            Month-of-year fixed effects
+          </label>
+        </fieldset>
+        <fieldset class="bin-spec-controls">
+          <legend>Product trip-count bins</legend>
+          <label class="wide-field">One bin per line
+            <textarea id="valBinSpec" rows="6">01
 02
 03
 04
@@ -83,53 +92,55 @@
 09-12
 13-20
 21+</textarea>
-        </label>
-        <p class="field-help wide-field">Use single counts, ranges, or an open-ended final bin. Examples: 01, 09-12, 21+. Bins must be ordered, non-overlapping, contiguous from 1, and end with a + bin.</p>
-      </fieldset>
-      <fieldset class="kernel-spec-controls">
-        <legend>Kernel conditioning</legend>
-        <p class="field-help wide-field">The kernel is the empirical basket pool used to compute expected product payment and expected trips. A basket is one positive user-month. Min support is the number of historical baskets required before using a kernel source without broadening it. Count bin is locked because it defines the product; relaxation controls what is broadened first when support is low.</p>
-        <label class="check">
-          <input id="valKernelSegment" type="checkbox">
-          Condition on segment
-        </label>
-        <label class="check">
-          <input id="valKernelPlan" type="checkbox">
-          Condition on plan
-        </label>
-        <label class="check locked">
-          <input id="valKernelCount" type="checkbox" checked disabled>
-          Condition on count bin (locked)
-        </label>
-        <label class="check">
-          <input id="valKernelMonth" type="checkbox">
-          Condition on month-of-year
-        </label>
-        <label>Relax first
-          <select id="valKernelRelax1">
-            <option value="plan">Plan</option>
-            <option value="month_of_year">Month-of-year</option>
-            <option value="segment">Segment</option>
-          </select>
-        </label>
-        <label>Relax second
-          <select id="valKernelRelax2">
-            <option value="segment">Segment</option>
-            <option value="month_of_year">Month-of-year</option>
-            <option value="plan">Plan</option>
-          </select>
-        </label>
-        <label>Relax third
-          <select id="valKernelRelax3">
-            <option value="month_of_year">Month-of-year</option>
-            <option value="plan">Plan</option>
-            <option value="segment">Segment</option>
-          </select>
-        </label>
-        <label>Min support
-          <input id="valKernelMinSupport" type="number" min="1" step="1" value="30">
-        </label>
-      </fieldset>
+          </label>
+          <p class="field-help wide-field">Use single counts, ranges, or an open-ended final bin. Examples: 01, 09-12, 21+. Bins must be ordered, non-overlapping, contiguous from 1, and end with a + bin.</p>
+        </fieldset>
+        <fieldset class="kernel-spec-controls">
+          <legend>Kernel conditioning</legend>
+          <p class="field-help wide-field">The kernel is the empirical basket pool used to compute expected product payment and expected trips. A basket is one positive user-month. Min support is the number of historical baskets required before using a kernel source without broadening it. Count bin is locked because it defines the product; relaxation controls what is broadened first when support is low.</p>
+          <label class="check">
+            <input id="valKernelSegment" type="checkbox">
+            Condition on segment
+          </label>
+          <label class="check">
+            <input id="valKernelPlan" type="checkbox">
+            Condition on plan
+          </label>
+          <label class="check locked">
+            <input id="valKernelCount" type="checkbox" checked disabled>
+            Condition on count bin (locked)
+          </label>
+          <label class="check">
+            <input id="valKernelMonth" type="checkbox">
+            Condition on month-of-year
+          </label>
+          <label>Relax first
+            <select id="valKernelRelax1">
+              <option value="plan">Plan</option>
+              <option value="month_of_year">Month-of-year</option>
+              <option value="segment">Segment</option>
+            </select>
+          </label>
+          <label>Relax second
+            <select id="valKernelRelax2">
+              <option value="segment">Segment</option>
+              <option value="month_of_year">Month-of-year</option>
+              <option value="plan">Plan</option>
+            </select>
+          </label>
+          <label>Relax third
+            <select id="valKernelRelax3">
+              <option value="month_of_year">Month-of-year</option>
+              <option value="plan">Plan</option>
+              <option value="segment">Segment</option>
+            </select>
+          </label>
+          <label>Min support
+            <input id="valKernelMinSupport" type="number" min="1" step="1" value="30">
+          </label>
+        </fieldset>
+      </div>
+
       <button id="runValidation" class="primary">Run validation</button>
       <div id="validationOutput" class="output"></div>
     </section>
@@ -160,92 +171,102 @@
           Exclude latest incomplete month
         </label>
       </div>
-      <p class="field-help wide-field">Future market size is forecast from the training data. For each future month, the dashboard uses the average number of in-market users from the same calendar month in training, then multiplies it by the future market size multiplier. If that calendar month is not present in training, it uses the overall training average.</p>
-      <fieldset class="model-spec-controls">
-        <legend>Model specification</legend>
-        <p class="field-help wide-field">Choose deterministic utility terms. Expected payment is required for what-if analysis because prices must affect predicted demand.</p>
-        <label class="check locked">
-          <input id="whatSpecPrice" type="checkbox" checked disabled>
-          Expected payment coefficient
-        </label>
+
+      <fieldset class="advanced-params-toggle">
         <label class="check">
-          <input id="whatSpecIntercept" type="checkbox" checked>
-          Intercept
-        </label>
-        <label class="check">
-          <input id="whatSpecCountFe" type="checkbox" checked>
-          Count-bin fixed effects
-        </label>
-        <label class="check">
-          <input id="whatSpecPlanFe" type="checkbox" checked>
-          Plan fixed effects
-        </label>
-        <label class="check">
-          <input id="whatSpecMonthFe" type="checkbox" checked>
-          Month-of-year fixed effects
+          <input id="whatShowAdvanced" type="checkbox">
+          Show additional model parameters
         </label>
       </fieldset>
-      <fieldset class="bin-spec-controls">
-        <legend>Product trip-count bins</legend>
-        <label class="wide-field">One bin per line
-          <textarea id="whatBinSpec" rows="6">01
-02
-03
-04
-05
-06
-07
-08
-09-12
-13-20
-21+</textarea>
-        </label>
-        <p class="field-help wide-field">Use single counts, ranges, or an open-ended final bin. Examples: 01, 09-12, 21+. Bins must be ordered, non-overlapping, contiguous from 1, and end with a + bin.</p>
-      </fieldset>
-      <fieldset class="kernel-spec-controls">
-        <legend>Kernel conditioning</legend>
-        <p class="field-help wide-field">The kernel is the empirical basket pool used to compute expected product payment and expected trips. A basket is one positive user-month. Min support is the number of historical baskets required before using a kernel source without broadening it. Count bin is locked because it defines the product; relaxation controls what is broadened first when support is low.</p>
-        <label class="check">
-          <input id="whatKernelSegment" type="checkbox">
-          Condition on segment
-        </label>
-        <label class="check">
-          <input id="whatKernelPlan" type="checkbox">
-          Condition on plan
-        </label>
-        <label class="check locked">
-          <input id="whatKernelCount" type="checkbox" checked disabled>
-          Condition on count bin (locked)
-        </label>
-        <label class="check">
-          <input id="whatKernelMonth" type="checkbox">
-          Condition on month-of-year
-        </label>
-        <label>Relax first
-          <select id="whatKernelRelax1">
-            <option value="plan">Plan</option>
-            <option value="month_of_year">Month-of-year</option>
-            <option value="segment">Segment</option>
-          </select>
-        </label>
-        <label>Relax second
-          <select id="whatKernelRelax2">
-            <option value="segment">Segment</option>
-            <option value="month_of_year">Month-of-year</option>
-            <option value="plan">Plan</option>
-          </select>
-        </label>
-        <label>Relax third
-          <select id="whatKernelRelax3">
-            <option value="month_of_year">Month-of-year</option>
-            <option value="plan">Plan</option>
-            <option value="segment">Segment</option>
-          </select>
-        </label>
-        <label>Min support
-          <input id="whatKernelMinSupport" type="number" min="1" step="1" value="30">
-        </label>
-      </fieldset>
+
+      <div id="whatAdvancedParams" style="display: none;">
+        <p class="field-help wide-field"><br>Future market size is forecast from the training data. For each future month, the dashboard uses the average number of in-market users from the same calendar month in training, then multiplies it by the future market size multiplier. If that calendar month is not present in training, it uses the overall training average.</p>
+        <fieldset class="model-spec-controls">
+          <legend>Model specification</legend>
+          <p class="field-help wide-field">Choose deterministic utility terms. Expected payment is required for what-if analysis because prices must affect predicted demand.</p>
+          <label class="check locked">
+            <input id="whatSpecPrice" type="checkbox" checked disabled>
+            Expected payment coefficient
+          </label>
+          <label class="check">
+            <input id="whatSpecIntercept" type="checkbox" checked>
+            Intercept
+          </label>
+          <label class="check">
+            <input id="whatSpecCountFe" type="checkbox" checked>
+            Count-bin fixed effects
+          </label>
+          <label class="check">
+            <input id="whatSpecPlanFe" type="checkbox" checked>
+            Plan fixed effects
+          </label>
+          <label class="check">
+            <input id="whatSpecMonthFe" type="checkbox" checked>
+            Month-of-year fixed effects
+          </label>
+        </fieldset>
+        <fieldset class="bin-spec-controls">
+          <legend>Product trip-count bins</legend>
+          <label class="wide-field">One bin per line
+            <textarea id="whatBinSpec" rows="6">01
+  02
+  03
+  04
+  05
+  06
+  07
+  08
+  09-12
+  13-20
+  21+</textarea>
+          </label>
+          <p class="field-help wide-field">Use single counts, ranges, or an open-ended final bin. Examples: 01, 09-12, 21+. Bins must be ordered, non-overlapping, contiguous from 1, and end with a + bin.</p>
+        </fieldset>
+        <fieldset class="kernel-spec-controls">
+          <legend>Kernel conditioning</legend>
+          <p class="field-help wide-field">The kernel is the empirical basket pool used to compute expected product payment and expected trips. A basket is one positive user-month. Min support is the number of historical baskets required before using a kernel source without broadening it. Count bin is locked because it defines the product; relaxation controls what is broadened first when support is low.</p>
+          <label class="check">
+            <input id="whatKernelSegment" type="checkbox">
+            Condition on segment
+          </label>
+          <label class="check">
+            <input id="whatKernelPlan" type="checkbox">
+            Condition on plan
+          </label>
+          <label class="check locked">
+            <input id="whatKernelCount" type="checkbox" checked disabled>
+            Condition on count bin (locked)
+          </label>
+          <label class="check">
+            <input id="whatKernelMonth" type="checkbox">
+            Condition on month-of-year
+          </label>
+          <label>Relax first
+            <select id="whatKernelRelax1">
+              <option value="plan">Plan</option>
+              <option value="month_of_year">Month-of-year</option>
+              <option value="segment">Segment</option>
+            </select>
+          </label>
+          <label>Relax second
+            <select id="whatKernelRelax2">
+              <option value="segment">Segment</option>
+              <option value="month_of_year">Month-of-year</option>
+              <option value="plan">Plan</option>
+            </select>
+          </label>
+          <label>Relax third
+            <select id="whatKernelRelax3">
+              <option value="month_of_year">Month-of-year</option>
+              <option value="plan">Plan</option>
+              <option value="segment">Segment</option>
+            </select>
+          </label>
+          <label>Min support
+            <input id="whatKernelMinSupport" type="number" min="1" step="1" value="30">
+          </label>
+        </fieldset>
+      </div>
 
       <div class="button-row">
         <button id="loadPricing">Load current pricing</button>
@@ -306,92 +327,102 @@
           Use SciPy polish if installed
         </label>
       </div>
-      <p class="field-help wide-field">The optimization maximizes predicted user-payment revenue subject to a predicted trip-volume constraint. Maximum trip-volume drop is the largest allowed decrease in total predicted trips relative to baseline pricing over the forecast horizon. If the monthly constraint is checked, the same limit is enforced separately in each forecast month. Evaluations per seed controls the direct-search budget for each random start; more evaluations and more seeds explore more prices but take longer. Keeping time rates proportional ties per-minute, per-hour, and per-day rates for each selected plan to a common multiplier. SciPy polish, when available, uses an open-source SLSQP local solver after direct search.</p>
-      <fieldset class="model-spec-controls">
-        <legend>Model specification</legend>
-        <p class="field-help wide-field">Choose deterministic utility terms. Expected payment is required for optimization because candidate prices must affect predicted demand.</p>
-        <label class="check locked">
-          <input id="optSpecPrice" type="checkbox" checked disabled>
-          Expected payment coefficient
-        </label>
+
+      <fieldset class="advanced-params-toggle">
         <label class="check">
-          <input id="optSpecIntercept" type="checkbox" checked>
-          Intercept
-        </label>
-        <label class="check">
-          <input id="optSpecCountFe" type="checkbox" checked>
-          Count-bin fixed effects
-        </label>
-        <label class="check">
-          <input id="optSpecPlanFe" type="checkbox" checked>
-          Plan fixed effects
-        </label>
-        <label class="check">
-          <input id="optSpecMonthFe" type="checkbox" checked>
-          Month-of-year fixed effects
+          <input id="optShowAdvanced" type="checkbox">
+          Show additional model parameters
         </label>
       </fieldset>
-      <fieldset class="bin-spec-controls">
-        <legend>Product trip-count bins</legend>
-        <label class="wide-field">One bin per line
-          <textarea id="optBinSpec" rows="6">01
-02
-03
-04
-05
-06
-07
-08
-09-12
-13-20
-21+</textarea>
-        </label>
-        <p class="field-help wide-field">Use single counts, ranges, or an open-ended final bin. Examples: 01, 09-12, 21+. Bins must be ordered, non-overlapping, contiguous from 1, and end with a + bin.</p>
-      </fieldset>
-      <fieldset class="kernel-spec-controls">
-        <legend>Kernel conditioning</legend>
-        <p class="field-help wide-field">The kernel is the empirical basket pool used to compute expected product payment and expected trips. A basket is one positive user-month. Min support is the number of historical baskets required before using a kernel source without broadening it. Count bin is locked because it defines the product; relaxation controls what is broadened first when support is low.</p>
-        <label class="check">
-          <input id="optKernelSegment" type="checkbox">
-          Condition on segment
-        </label>
-        <label class="check">
-          <input id="optKernelPlan" type="checkbox">
-          Condition on plan
-        </label>
-        <label class="check locked">
-          <input id="optKernelCount" type="checkbox" checked disabled>
-          Condition on count bin (locked)
-        </label>
-        <label class="check">
-          <input id="optKernelMonth" type="checkbox">
-          Condition on month-of-year
-        </label>
-        <label>Relax first
-          <select id="optKernelRelax1">
-            <option value="plan">Plan</option>
-            <option value="month_of_year">Month-of-year</option>
-            <option value="segment">Segment</option>
-          </select>
-        </label>
-        <label>Relax second
-          <select id="optKernelRelax2">
-            <option value="segment">Segment</option>
-            <option value="month_of_year">Month-of-year</option>
-            <option value="plan">Plan</option>
-          </select>
-        </label>
-        <label>Relax third
-          <select id="optKernelRelax3">
-            <option value="month_of_year">Month-of-year</option>
-            <option value="plan">Plan</option>
-            <option value="segment">Segment</option>
-          </select>
-        </label>
-        <label>Min support
-          <input id="optKernelMinSupport" type="number" min="1" step="1" value="30">
-        </label>
-      </fieldset>
+
+      <div id="optAdvancedParams" style="display: none;">
+        <p class="field-help wide-field"><br>The optimization maximizes predicted user-payment revenue subject to a predicted trip-volume constraint. Maximum trip-volume drop is the largest allowed decrease in total predicted trips relative to baseline pricing over the forecast horizon. If the monthly constraint is checked, the same limit is enforced separately in each forecast month. Evaluations per seed controls the direct-search budget for each random start; more evaluations and more seeds explore more prices but take longer. Keeping time rates proportional ties per-minute, per-hour, and per-day rates for each selected plan to a common multiplier. SciPy polish, when available, uses an open-source SLSQP local solver after direct search.</p>
+        <fieldset class="model-spec-controls">
+          <legend>Model specification</legend>
+          <p class="field-help wide-field">Choose deterministic utility terms. Expected payment is required for optimization because candidate prices must affect predicted demand.</p>
+          <label class="check locked">
+            <input id="optSpecPrice" type="checkbox" checked disabled>
+            Expected payment coefficient
+          </label>
+          <label class="check">
+            <input id="optSpecIntercept" type="checkbox" checked>
+            Intercept
+          </label>
+          <label class="check">
+            <input id="optSpecCountFe" type="checkbox" checked>
+            Count-bin fixed effects
+          </label>
+          <label class="check">
+            <input id="optSpecPlanFe" type="checkbox" checked>
+            Plan fixed effects
+          </label>
+          <label class="check">
+            <input id="optSpecMonthFe" type="checkbox" checked>
+            Month-of-year fixed effects
+          </label>
+        </fieldset>
+        <fieldset class="bin-spec-controls">
+          <legend>Product trip-count bins</legend>
+          <label class="wide-field">One bin per line
+            <textarea id="optBinSpec" rows="6">01
+  02
+  03
+  04
+  05
+  06
+  07
+  08
+  09-12
+  13-20
+  21+</textarea>
+          </label>
+          <p class="field-help wide-field">Use single counts, ranges, or an open-ended final bin. Examples: 01, 09-12, 21+. Bins must be ordered, non-overlapping, contiguous from 1, and end with a + bin.</p>
+        </fieldset>
+        <fieldset class="kernel-spec-controls">
+          <legend>Kernel conditioning</legend>
+          <p class="field-help wide-field">The kernel is the empirical basket pool used to compute expected product payment and expected trips. A basket is one positive user-month. Min support is the number of historical baskets required before using a kernel source without broadening it. Count bin is locked because it defines the product; relaxation controls what is broadened first when support is low.</p>
+          <label class="check">
+            <input id="optKernelSegment" type="checkbox">
+            Condition on segment
+          </label>
+          <label class="check">
+            <input id="optKernelPlan" type="checkbox">
+            Condition on plan
+          </label>
+          <label class="check locked">
+            <input id="optKernelCount" type="checkbox" checked disabled>
+            Condition on count bin (locked)
+          </label>
+          <label class="check">
+            <input id="optKernelMonth" type="checkbox">
+            Condition on month-of-year
+          </label>
+          <label>Relax first
+            <select id="optKernelRelax1">
+              <option value="plan">Plan</option>
+              <option value="month_of_year">Month-of-year</option>
+              <option value="segment">Segment</option>
+            </select>
+          </label>
+          <label>Relax second
+            <select id="optKernelRelax2">
+              <option value="segment">Segment</option>
+              <option value="month_of_year">Month-of-year</option>
+              <option value="plan">Plan</option>
+            </select>
+          </label>
+          <label>Relax third
+            <select id="optKernelRelax3">
+              <option value="month_of_year">Month-of-year</option>
+              <option value="plan">Plan</option>
+              <option value="segment">Segment</option>
+            </select>
+          </label>
+          <label>Min support
+            <input id="optKernelMinSupport" type="number" min="1" step="1" value="30">
+          </label>
+        </fieldset>
+      </div>
 
       <div class="button-row">
         <button id="loadOptBounds">Load pricing bounds</button>
