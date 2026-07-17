@@ -1752,7 +1752,14 @@ def market_size_forecast(user_month: pd.DataFrame, train_months: List[str], futu
     month_sizes = train.groupby("YearMonth")["UserID"].nunique()
     train = train.merge(month_sizes.rename("market_size"),
                         left_on="YearMonth", right_index=True, how="left")
-    moy_mean = train.groupby("MonthOfYear")["market_size"].mean().to_dict()
+
+    # Only include past 13 months
+    cutoff_period = pd.Period(train["YearMonth"].max(), freq="M") - 13
+    cutoff_month = cutoff_period.strftime("%Y-%m")
+    train_recent = train[train["YearMonth"] >= cutoff_month].copy()
+
+    moy_mean = train_recent.groupby("MonthOfYear")["market_size"].mean(
+    ).to_dict()
     fallback = float(month_sizes.mean())
     return {m: float(moy_mean.get(int(m[-2:]), fallback) * multiplier) for m in future_months}
 

@@ -62,7 +62,7 @@ WRITE_DASHBOARD_COPIES = True
 DASHBOARD_OUTPUT_DIR = SCRIPT_DIR.parent
 
 # Set this to lower (i.e. 12 months) to decrease market size
-K_MONTHS_IN_MARKET = 48
+K_MONTHS_IN_MARKET = 36
 INCLUDE_CURRENT_MONTH_USE = True
 
 FIRST_OUTPUT_MONTH = "2023-04"
