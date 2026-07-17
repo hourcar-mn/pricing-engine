@@ -59,7 +59,7 @@ INPUT_CSV = SCRIPT_DIR / "01_clean_trips_invoice" / \
 OUTPUT_DIR = SCRIPT_DIR / "02_user_month_panels"
 
 WRITE_DASHBOARD_COPIES = True
-DASHBOARD_OUTPUT_DIR = SCRIPT_DIR.parent
+DASHBOARD_OUTPUT_DIR = SCRIPT_DIR.parent / "dashboard_data"
 
 # Set this to lower (i.e. 12 months) to decrease market size
 K_MONTHS_IN_MARKET = 36

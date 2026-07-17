@@ -1,15 +1,15 @@
 """
-Run this file in Spyder to launch the EVIE demand dashboard with optimization.
+Run this file to launch the Evie demand dashboard with optimization.
 
 Steps:
-1. Open this file in Spyder.
+1. Open this file in your preferred IDE.
 2. Click the green Run button.
 3. Your browser should open automatically at http://127.0.0.1:8766.
-4. Leave the Spyder console running while using the dashboard.
-5. When finished, click the red Stop button in Spyder.
+4. Leave the IDE console running while using the dashboard.
+5. When finished, click the red Stop button in the IDE.
 
-The dashboard reads the data files from this Dashboard folder. Put these files
-next to this script before running:
+The dashboard reads the data files from the "dashboard_data" folder within this Dashboard folder. Put these files
+in the "dashboard_data" folder before running:
 
 - clean_trips_with_invoice_plan_and_segment.csv
 - user_month_regular.csv
