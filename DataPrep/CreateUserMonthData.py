@@ -54,7 +54,8 @@ import pandas as pd
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
-INPUT_CSV = SCRIPT_DIR / "01_clean_trips_invoice" / "clean_trips_with_invoice_plan_and_segment.csv"
+INPUT_CSV = SCRIPT_DIR / "01_clean_trips_invoice" / \
+    "clean_trips_with_invoice_plan_and_segment.csv"
 OUTPUT_DIR = SCRIPT_DIR / "02_user_month_panels"
 
 WRITE_DASHBOARD_COPIES = True
@@ -64,7 +65,8 @@ K_MONTHS_IN_MARKET = 12
 INCLUDE_CURRENT_MONTH_USE = True
 
 FIRST_OUTPUT_MONTH = "2023-04"
-LAST_OUTPUT_MONTH = None  # None means use the last month in the baseline trip file.
+# None means use the last month in the baseline trip file.
+LAST_OUTPUT_MONTH = None
 
 SEGMENTS_TO_KEEP = ["Regular", "Access", "Student"]
 
@@ -243,8 +245,10 @@ if missing:
 
 trips["TripStartDT"] = pd.to_datetime(trips["TripStartDT"], errors="coerce")
 trips["YearMonth"] = pd.PeriodIndex(trips["YearMonth"].astype(str), freq="M")
-trips["TripDurationMinutes"] = pd.to_numeric(trips["TripDurationMinutes"], errors="coerce")
-trips["TripDistanceMiles"] = pd.to_numeric(trips["TripDistanceMiles"], errors="coerce")
+trips["TripDurationMinutes"] = pd.to_numeric(
+    trips["TripDurationMinutes"], errors="coerce")
+trips["TripDistanceMiles"] = pd.to_numeric(
+    trips["TripDistanceMiles"], errors="coerce")
 
 print(f"Input trip rows: {len(trips):,}")
 print(f"Input users: {trips['UserID'].nunique():,}")
@@ -262,9 +266,11 @@ print(pd.crosstab(trips["UserSegment"], trips["PlanUsedForTrip"]).to_string())
 
 print_stage("STEP 2: Drop conflicting users")
 
-conflicting_users = trips.loc[trips["UserSegment"] == "Conflicting", "UserID"].drop_duplicates()
+conflicting_users = trips.loc[trips["UserSegment"]
+                              == "Conflicting", "UserID"].drop_duplicates()
 print(f"Conflicting users: {len(conflicting_users):,}")
-print(f"Trips from conflicting users: {(trips['UserID'].isin(conflicting_users)).sum():,}")
+print(
+    f"Trips from conflicting users: {(trips['UserID'].isin(conflicting_users)).sum():,}")
 
 trips = trips[~trips["UserID"].isin(conflicting_users)].copy()
 
@@ -282,16 +288,20 @@ print(pd.crosstab(trips["UserSegment"], trips["PlanUsedForTrip"]).to_string())
 print_stage("STEP 3: Define users and output months")
 
 first_output_month = pd.Period(FIRST_OUTPUT_MONTH, freq="M")
-last_output_month = pd.Period(LAST_OUTPUT_MONTH, freq="M") if LAST_OUTPUT_MONTH is not None else trips["YearMonth"].max()
+last_output_month = pd.Period(
+    LAST_OUTPUT_MONTH, freq="M") if LAST_OUTPUT_MONTH is not None else trips["YearMonth"].max()
 
 if last_output_month < first_output_month:
-    raise ValueError(f"Invalid output month range: {first_output_month} to {last_output_month}")
+    raise ValueError(
+        f"Invalid output month range: {first_output_month} to {last_output_month}")
 
-output_months = pd.period_range(first_output_month, last_output_month, freq="M")
+output_months = pd.period_range(
+    first_output_month, last_output_month, freq="M")
 users = trips[["UserID", "UserSegment"]].drop_duplicates()
 
 if users["UserID"].duplicated().any():
-    raise RuntimeError("A user appears in more than one non-conflicting segment.")
+    raise RuntimeError(
+        "A user appears in more than one non-conflicting segment.")
 
 print(f"Output month range: {first_output_month} to {last_output_month}")
 print(f"Number of output months: {len(output_months):,}")
@@ -313,7 +323,8 @@ users_tmp["__key"] = 1
 month_df["__key"] = 1
 
 panel = users_tmp.merge(month_df, on="__key").drop(columns="__key")
-panel = panel.sort_values(["UserSegment", "UserID", "YearMonth"]).reset_index(drop=True)
+panel = panel.sort_values(
+    ["UserSegment", "UserID", "YearMonth"]).reset_index(drop=True)
 panel["MonthOfYear"] = panel["YearMonth"].dt.month.astype(int)
 
 print(f"Full user-month rows: {len(panel):,}")
@@ -330,26 +341,33 @@ history_months = (
     .groupby(["UserID", "YearMonth"], as_index=False)
     .agg(HistoryTripCount=("TripID", "count"))
 )
-history_months["UsedThisMonth"] = (history_months["HistoryTripCount"] > 0).astype(int)
+history_months["UsedThisMonth"] = (
+    history_months["HistoryTripCount"] > 0).astype(int)
 
 history_start_month = trips["YearMonth"].min()
-rolling_months = pd.period_range(history_start_month, last_output_month, freq="M")
+rolling_months = pd.period_range(
+    history_start_month, last_output_month, freq="M")
 
 rolling_month_df = pd.DataFrame({"YearMonth": rolling_months})
 users_roll = users[["UserID"]].copy()
 users_roll["__key"] = 1
 rolling_month_df["__key"] = 1
 
-rolling_grid = users_roll.merge(rolling_month_df, on="__key").drop(columns="__key")
+rolling_grid = users_roll.merge(
+    rolling_month_df, on="__key").drop(columns="__key")
 rolling_grid = rolling_grid.merge(
-    history_months[["UserID", "YearMonth", "HistoryTripCount", "UsedThisMonth"]],
+    history_months[["UserID", "YearMonth",
+                    "HistoryTripCount", "UsedThisMonth"]],
     on=["UserID", "YearMonth"],
     how="left",
 )
 
-rolling_grid["HistoryTripCount"] = rolling_grid["HistoryTripCount"].fillna(0).astype(int)
-rolling_grid["UsedThisMonth"] = rolling_grid["UsedThisMonth"].fillna(0).astype(int)
-rolling_grid = rolling_grid.sort_values(["UserID", "YearMonth"]).reset_index(drop=True)
+rolling_grid["HistoryTripCount"] = rolling_grid["HistoryTripCount"].fillna(
+    0).astype(int)
+rolling_grid["UsedThisMonth"] = rolling_grid["UsedThisMonth"].fillna(
+    0).astype(int)
+rolling_grid = rolling_grid.sort_values(
+    ["UserID", "YearMonth"]).reset_index(drop=True)
 
 rolling_grid["UsedInPriorKMonths"] = (
     rolling_grid
@@ -413,21 +431,27 @@ for (uid, ym), g in output_trips.groupby(["UserID", "YearMonth"]):
     })
 
 monthly_plan = pd.DataFrame(monthly_plan_rows)
-monthly_usage = monthly_basic.merge(monthly_plan, on=["UserID", "YearMonth"], how="left")
+monthly_usage = monthly_basic.merge(
+    monthly_plan, on=["UserID", "YearMonth"], how="left")
 panel = panel.merge(monthly_usage, on=["UserID", "YearMonth"], how="left")
 
 panel["TripCount"] = panel["TripCount"].fillna(0).astype(int)
 panel["TotalDistanceMiles"] = panel["TotalDistanceMiles"].fillna(0.0)
 panel["TotalDurationMinutes"] = panel["TotalDurationMinutes"].fillna(0.0)
 panel["HadMonthlyPlanTie"] = panel["HadMonthlyPlanTie"].fillna(0).astype(int)
-panel["DistinctPlansUsedThisMonth"] = panel["DistinctPlansUsedThisMonth"].fillna(0).astype(int)
+panel["DistinctPlansUsedThisMonth"] = panel["DistinctPlansUsedThisMonth"].fillna(
+    0).astype(int)
 
 zero_trip = panel["TripCount"] == 0
-panel.loc[zero_trip & (panel["InMarket"] == 1), "PlanUsedThisMonth"] = "Free Plan"
-panel.loc[zero_trip & (panel["InMarket"] == 0), "PlanUsedThisMonth"] = "Not In Market"
+panel.loc[zero_trip & (panel["InMarket"] == 1),
+          "PlanUsedThisMonth"] = "Free Plan"
+panel.loc[zero_trip & (panel["InMarket"] == 0),
+          "PlanUsedThisMonth"] = "Not In Market"
 
-print(f"Output-month positive-use user-months: {(panel['TripCount'] > 0).sum():,}")
-print(f"Monthly plan ties among positive-use months: {panel['HadMonthlyPlanTie'].sum():,}")
+print(
+    f"Output-month positive-use user-months: {(panel['TripCount'] > 0).sum():,}")
+print(
+    f"Monthly plan ties among positive-use months: {panel['HadMonthlyPlanTie'].sum():,}")
 print("\nPlanUsedThisMonth counts:")
 print(panel["PlanUsedThisMonth"].value_counts(dropna=False).to_string())
 print("\nTripCount summary for in-market months:")
@@ -443,7 +467,8 @@ print_stage("STEP 7: Attach monthly pricing")
 pricing_rows = []
 for month in output_months:
     for segment in SEGMENTS_TO_KEEP:
-        regime, paid_price, free_price = monthly_pricing_strings(month, segment)
+        regime, paid_price, free_price = monthly_pricing_strings(
+            month, segment)
         pricing_rows.append({
             "YearMonth": month,
             "UserSegment": segment,
@@ -467,7 +492,8 @@ print(
     .to_string(index=False)
 )
 print("\nUser-month rows by pricing regime:")
-print(panel["PricingRegime_Month"].value_counts(dropna=False).sort_index().to_string())
+print(panel["PricingRegime_Month"].value_counts(
+    dropna=False).sort_index().to_string())
 
 
 # =============================================================================
@@ -494,9 +520,11 @@ print(pd.crosstab(
 print("\nAll user-month rows by segment:")
 print(panel["UserSegment"].value_counts().to_string())
 print("\nIn-market user-month rows by segment:")
-print(panel.loc[panel["InMarket"] == 1, "UserSegment"].value_counts().to_string())
+print(panel.loc[panel["InMarket"] == 1,
+      "UserSegment"].value_counts().to_string())
 print("\nPositive-use user-month rows by segment:")
-print(panel.loc[panel["TripCount"] > 0, "UserSegment"].value_counts().to_string())
+print(panel.loc[panel["TripCount"] > 0,
+      "UserSegment"].value_counts().to_string())
 
 
 # =============================================================================
@@ -538,8 +566,10 @@ for segment in SEGMENTS_TO_KEEP:
     print(f"Wrote: {seg_path.resolve()}  rows: {len(out_seg):,}")
 
     if WRITE_DASHBOARD_COPIES:
-        dashboard_path = DASHBOARD_OUTPUT_DIR / f"user_month_{segment_stub}.csv"
+        dashboard_path = DASHBOARD_OUTPUT_DIR / \
+            f"user_month_{segment_stub}.csv"
         out_seg.to_csv(dashboard_path, index=False)
-        print(f"Wrote dashboard copy: {dashboard_path.resolve()}  rows: {len(out_seg):,}")
+        print(
+            f"Wrote dashboard copy: {dashboard_path.resolve()}  rows: {len(out_seg):,}")
 
 print("\nDone.")

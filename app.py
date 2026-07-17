@@ -51,7 +51,8 @@ def start_optimization_job(payload: dict) -> str:
 
     def worker() -> None:
         try:
-            result = run_optimization(payload, progress_callback=update_progress)
+            result = run_optimization(
+                payload, progress_callback=update_progress)
             with OPTIMIZATION_JOBS_LOCK:
                 job = OPTIMIZATION_JOBS.get(job_id)
                 if job is not None:
@@ -125,13 +126,16 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 qs = parse_qs(parsed.query)
                 segment = qs.get("segment", ["Regular"])[0]
                 train_end = qs.get("train_end", [None])[0] or None
-                drop_latest = qs.get("drop_latest", ["true"])[0].lower() != "false"
-                self.send_json({"ok": True, "data": latest_pricing(segment, train_end=train_end, drop_latest=drop_latest)})
+                drop_latest = qs.get("drop_latest", ["true"])[
+                    0].lower() != "false"
+                self.send_json({"ok": True, "data": latest_pricing(
+                    segment, train_end=train_end, drop_latest=drop_latest)})
                 return
             if parsed.path == "/api/optimize/status":
                 qs = parse_qs(parsed.query)
                 job_id = qs.get("job_id", [""])[0]
-                self.send_json({"ok": True, "data": optimization_job_status(job_id)})
+                self.send_json(
+                    {"ok": True, "data": optimization_job_status(job_id)})
                 return
             self.serve_static(parsed.path)
         except Exception as exc:
@@ -152,9 +156,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self.send_json({"ok": True, "data": run_optimization(payload)})
                 return
             if parsed.path == "/api/optimize/start":
-                self.send_json({"ok": True, "data": {"job_id": start_optimization_job(payload)}})
+                self.send_json(
+                    {"ok": True, "data": {"job_id": start_optimization_job(payload)}})
                 return
-            self.send_json({"ok": False, "error": f"Unknown endpoint {parsed.path}"}, status=404)
+            self.send_json(
+                {"ok": False, "error": f"Unknown endpoint {parsed.path}"}, status=404)
         except Exception as exc:
             self.send_error_json(exc)
 
@@ -169,7 +175,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b"Not found")
             return
-        content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+        content_type = mimetypes.guess_type(
+            path.name)[0] or "application/octet-stream"
         body = path.read_bytes()
         self.send_response(200)
         self.send_header("Content-Type", content_type)
