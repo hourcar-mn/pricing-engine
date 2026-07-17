@@ -1,4 +1,4 @@
-"""Demand-estimation and pricing-analysis engine for the EVIE dashboard.
+"""Demand-estimation and pricing-analysis engine for the Evie dashboard.
 
 This module is the service layer behind ``app.py``.  The browser sends a plain
 configuration dictionary, and the public entry points return JSON-compatible
@@ -35,13 +35,13 @@ import pandas as pd
 # ---------------------------------------------------------------------------
 # File locations, default model controls, and tariff parameter names
 # ---------------------------------------------------------------------------
-
 BASE_DIR = Path(__file__).resolve().parent
-TRIP_FILE = BASE_DIR / "clean_trips_with_invoice_plan_and_segment.csv"
+DATA_DIR = BASE_DIR / "dashboard_data"
+TRIP_FILE = DATA_DIR / "clean_trips_with_invoice_plan_and_segment.csv"
 USER_MONTH_FILES = {
-    "Regular": BASE_DIR / "user_month_regular.csv",
-    "Student": BASE_DIR / "user_month_student.csv",
-    "Access": BASE_DIR / "user_month_access.csv",
+    "Regular": DATA_DIR / "user_month_regular.csv",
+    "Student": DATA_DIR / "user_month_student.csv",
+    "Access": DATA_DIR / "user_month_access.csv",
 }
 SEGMENT_PLANS = {
     "Regular": ["Everyday", "Free Plan"],

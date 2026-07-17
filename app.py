@@ -1,4 +1,4 @@
-"""Local web server for the EVIE demand dashboard.
+"""Local web server for the Evie demand dashboard.
 
 The server is intentionally small and dependency-free.  It serves the files in
 ``static/`` and exposes JSON endpoints that call the demand engine.  All model
@@ -190,9 +190,9 @@ def main(open_browser: bool = False) -> None:
     """Run the local dashboard server until the user stops the process."""
     server = ThreadingHTTPServer((HOST, PORT), DashboardHandler)
     url = f"http://{HOST}:{PORT}"
-    print(f"EVIE demand dashboard running at {url}")
-    print("In Spyder: keep this console running while using the dashboard.")
-    print("To close the dashboard app, click the red Stop button in Spyder.")
+    print(f"Evie demand dashboard running at {url}")
+    print("In IDE: keep this console running while using the dashboard.")
+    print("To close the dashboard app, click the red Stop button in IDE.")
     if open_browser:
         threading.Timer(1.0, lambda: webbrowser.open(url)).start()
     server.serve_forever()

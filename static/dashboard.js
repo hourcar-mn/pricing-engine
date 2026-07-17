@@ -1,5 +1,5 @@
 /*
-  Browser controller for the EVIE demand dashboard.
+  Browser controller for the Evie demand dashboard.
 
   The backend owns the demand model, kernel construction, forecasting, and
   optimization. This file collects form inputs, calls the JSON API, and renders
