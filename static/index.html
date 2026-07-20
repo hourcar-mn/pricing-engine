@@ -25,13 +25,13 @@
   <!-- Model-validation workflow: estimate on training months and compare to observed testing months. -->
     <section id="validation" class="panel active">
       <div class="control-grid">
-        <label>Segment
+        <label>Mobility Plan
           <select id="valSegment"></select>
         </label>
-        <label>Train start
+        <label>Data start
           <input id="valTrainStart" type="month">
         </label>
-        <label>Train end
+        <label>Data end
           <input id="valTrainEnd" type="month">
         </label>
         <label>Test start
@@ -100,7 +100,7 @@
           <p class="field-help wide-field">The kernel is the empirical basket pool used to compute expected product payment and expected trips. A basket is one positive user-month. Min support is the number of historical baskets required before using a kernel source without broadening it. Count bin is locked because it defines the product; relaxation controls what is broadened first when support is low.</p>
           <label class="check">
             <input id="valKernelSegment" type="checkbox">
-            Condition on segment
+            Condition on mobility plan
           </label>
           <label class="check">
             <input id="valKernelPlan" type="checkbox">
@@ -118,12 +118,12 @@
             <select id="valKernelRelax1">
               <option value="plan">Plan</option>
               <option value="month_of_year">Month-of-year</option>
-              <option value="segment">Segment</option>
+              <option value="segment">Mobility Plan</option>
             </select>
           </label>
           <label>Relax second
             <select id="valKernelRelax2">
-              <option value="segment">Segment</option>
+              <option value="segment">Mobility Plan</option>
               <option value="month_of_year">Month-of-year</option>
               <option value="plan">Plan</option>
             </select>
@@ -132,7 +132,7 @@
             <select id="valKernelRelax3">
               <option value="month_of_year">Month-of-year</option>
               <option value="plan">Plan</option>
-              <option value="segment">Segment</option>
+              <option value="segment">Mobility Plan</option>
             </select>
           </label>
           <label>Min support
@@ -149,13 +149,13 @@
     <section id="whatif" class="panel">
       <div class="control-grid">
         <div class="segment-check-field">
-          <span class="field-label">Segments</span>
+          <span class="field-label">Mobility Plans</span>
           <div id="whatSegmentGroup" class="segment-checkbox-row"></div>
         </div>
-        <label>Train start
+        <label>Data start
           <input id="whatTrainStart" type="month">
         </label>
-        <label>Train end
+        <label>Data end
           <input id="whatTrainEnd" type="month">
         </label>
         <label>Forecast start
@@ -172,7 +172,7 @@
           Exclude latest incomplete month
         </label>
       </div>
-      <p class="field-help">Select one or more segments. Each selected segment is estimated and forecast separately, using the same training/forecast window and model settings below, and all results are shown together.</p>
+      <p class="field-help">Select one or more mobility plan. Each selected mobility plan is estimated and forecast separately, using the same training/forecast window and model settings below, and all results are shown together.</p>
 
       <fieldset class="advanced-params-toggle">
         <label class="check">
@@ -229,7 +229,7 @@
           <p class="field-help wide-field">The kernel is the empirical basket pool used to compute expected product payment and expected trips. A basket is one positive user-month. Min support is the number of historical baskets required before using a kernel source without broadening it. Count bin is locked because it defines the product; relaxation controls what is broadened first when support is low.</p>
           <label class="check">
             <input id="whatKernelSegment" type="checkbox">
-            Condition on segment
+            Condition on mobility plan
           </label>
           <label class="check">
             <input id="whatKernelPlan" type="checkbox">
@@ -247,12 +247,12 @@
             <select id="whatKernelRelax1">
               <option value="plan">Plan</option>
               <option value="month_of_year">Month-of-year</option>
-              <option value="segment">Segment</option>
+              <option value="segment">Mobility Plan</option>
             </select>
           </label>
           <label>Relax second
             <select id="whatKernelRelax2">
-              <option value="segment">Segment</option>
+              <option value="segment">Mobility Plan</option>
               <option value="month_of_year">Month-of-year</option>
               <option value="plan">Plan</option>
             </select>
@@ -261,7 +261,7 @@
             <select id="whatKernelRelax3">
               <option value="month_of_year">Month-of-year</option>
               <option value="plan">Plan</option>
-              <option value="segment">Segment</option>
+              <option value="segment">Mobility Plan</option>
             </select>
           </label>
           <label>Min support
@@ -282,13 +282,13 @@
     <!-- Optimization workflow: search over selected tariff bounds subject to trip-volume constraints. -->
     <section id="optimization" class="panel">
       <div class="control-grid">
-        <label>Segment
+        <label>Mobility Plan
           <select id="optSegment"></select>
         </label>
-        <label>Train start
+        <label>Data start
           <input id="optTrainStart" type="month">
         </label>
-        <label>Train end
+        <label>Data end
           <input id="optTrainEnd" type="month">
         </label>
         <label>Forecast start
@@ -385,7 +385,7 @@
           <p class="field-help wide-field">The kernel is the empirical basket pool used to compute expected product payment and expected trips. A basket is one positive user-month. Min support is the number of historical baskets required before using a kernel source without broadening it. Count bin is locked because it defines the product; relaxation controls what is broadened first when support is low.</p>
           <label class="check">
             <input id="optKernelSegment" type="checkbox">
-            Condition on segment
+            Condition on mobility plan
           </label>
           <label class="check">
             <input id="optKernelPlan" type="checkbox">
@@ -403,12 +403,12 @@
             <select id="optKernelRelax1">
               <option value="plan">Plan</option>
               <option value="month_of_year">Month-of-year</option>
-              <option value="segment">Segment</option>
+              <option value="segment">Mobility Plan</option>
             </select>
           </label>
           <label>Relax second
             <select id="optKernelRelax2">
-              <option value="segment">Segment</option>
+              <option value="segment">Mobility Plan</option>
               <option value="month_of_year">Month-of-year</option>
               <option value="plan">Plan</option>
             </select>
@@ -417,7 +417,7 @@
             <select id="optKernelRelax3">
               <option value="month_of_year">Month-of-year</option>
               <option value="plan">Plan</option>
-              <option value="segment">Segment</option>
+              <option value="segment">Mobility Plan</option>
             </select>
           </label>
           <label>Min support
