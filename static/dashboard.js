@@ -36,6 +36,10 @@ const pricingParameterOrder = [
   "monthly_credit",
 ];
 
+// Free Plan pricing does not vary by segment, so the What-if tab loads and
+// shows it once instead of once per selected segment.
+const FREE_PLAN_NAME = "Free Plan";
+
 const fmtMoney = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -394,7 +398,7 @@ async function runWhatIf() {
     return;
   }
 
-  const pricingBySegment = collectPricingInputs();
+  const pricingBySegment = collectPricingInputs(segments);
 
   setStatus(`Running what-if for ${segments.length} segment${segments.length > 1 ? "s" : ""}...`);
   const settled = await Promise.allSettled(
@@ -985,13 +989,42 @@ function renderPricingControls(basePricingBySegment) {
   const container = document.getElementById("pricingControls");
   container.innerHTML = "";
 
+  const segments = Object.keys(basePricingBySegment);
+  if (!segments.length) return;
+
   const help = document.createElement("p");
   help.className = "field-help";
   help.textContent =
-    "Edit absolute pricing parameters for each selected segment. Leaving a field equal to its loaded value means the current real-world value is used for that segment.";
+    "Edit absolute pricing parameters. Leaving a field equal to its loaded value means the current real-world value is used. Free Plan pricing does not vary by segment, so it is loaded once and applies to every selected segment; other plans are edited per segment below.";
   container.appendChild(help);
 
-  Object.entries(basePricingBySegment).forEach(([segment, basePricing]) => {
+  // Free Plan pricing is identical across segments, so only load and show one
+  // card for it instead of repeating it inside every segment block.
+  const freePlanValues = segments
+    .map((segment) => basePricingBySegment[segment].pricing[FREE_PLAN_NAME])
+    .find((values) => values);
+
+  if (freePlanValues) {
+    const freeBlock = document.createElement("div");
+    freeBlock.className = "pricing-segment-block";
+
+    const freeTitle = document.createElement("h3");
+    freeTitle.className = "pricing-segment-title";
+    freeTitle.textContent = `${FREE_PLAN_NAME} (shared across all selected segments)`;
+    freeBlock.appendChild(freeTitle);
+
+    const cardsWrap = document.createElement("div");
+    cardsWrap.className = "pricing-grid";
+    cardsWrap.appendChild(buildPricingCard(FREE_PLAN_NAME, freePlanValues, { shared: true }));
+    freeBlock.appendChild(cardsWrap);
+    container.appendChild(freeBlock);
+  }
+
+  segments.forEach((segment) => {
+    const basePricing = basePricingBySegment[segment];
+    const otherPlans = Object.entries(basePricing.pricing).filter(([plan]) => plan !== FREE_PLAN_NAME);
+    if (!otherPlans.length) return;
+
     const segmentBlock = document.createElement("div");
     segmentBlock.className = "pricing-segment-block";
 
@@ -1003,50 +1036,58 @@ function renderPricingControls(basePricingBySegment) {
     const cardsWrap = document.createElement("div");
     cardsWrap.className = "pricing-grid";
 
-    Object.entries(basePricing.pricing).forEach(([plan, values]) => {
-      const card = document.createElement("div");
-      card.className = "pricing-card";
-      card.dataset.plan = plan;
-      card.dataset.segment = segment;
-
-      const title = document.createElement("h3");
-      title.textContent = plan;
-      card.appendChild(title);
-
-      const grid = document.createElement("div");
-      grid.className = "pricing-grid";
-
-      [
-        ["trip_start_fee", "Trip start fee"],
-        ["per_minute", "Per minute"],
-        ["per_hour", "Per hour"],
-        ["per_day", "Per day"],
-        ["included_miles", "Included miles"],
-        ["extra_mile", "Extra-mile fee"],
-        ["monthly_fee", "Monthly fee"],
-        ["monthly_credit", "Monthly credit"],
-      ].forEach(([key, label]) => {
-        const wrap = document.createElement("label");
-        wrap.className = "pricing-field";
-        wrap.innerHTML = `<span>${label}</span>`;
-        const input = document.createElement("input");
-        input.type = "number";
-        input.step = key === "included_miles" ? "1" : "0.01";
-        input.value = Number(values[key] ?? 0);
-        input.dataset.segment = segment;
-        input.dataset.plan = plan;
-        input.dataset.param = key;
-        wrap.appendChild(input);
-        grid.appendChild(wrap);
-      });
-
-      card.appendChild(grid);
-      cardsWrap.appendChild(card);
+    otherPlans.forEach(([plan, values]) => {
+      cardsWrap.appendChild(buildPricingCard(plan, values, { segment }));
     });
 
     segmentBlock.appendChild(cardsWrap);
     container.appendChild(segmentBlock);
   });
+}
+
+function buildPricingCard(plan, values, { segment, shared } = {}) {
+  const card = document.createElement("div");
+  card.className = "pricing-card";
+  card.dataset.plan = plan;
+  if (segment) card.dataset.segment = segment;
+
+  const title = document.createElement("h3");
+  title.textContent = plan;
+  card.appendChild(title);
+
+  const grid = document.createElement("div");
+  grid.className = "pricing-grid";
+
+  [
+    ["trip_start_fee", "Trip start fee"],
+    ["per_minute", "Per minute"],
+    ["per_hour", "Per hour"],
+    ["per_day", "Per day"],
+    ["included_miles", "Included miles"],
+    ["extra_mile", "Extra-mile fee"],
+    ["monthly_fee", "Monthly fee"],
+    ["monthly_credit", "Monthly credit"],
+  ].forEach(([key, label]) => {
+    const wrap = document.createElement("label");
+    wrap.className = "pricing-field";
+    wrap.innerHTML = `<span>${label}</span>`;
+    const input = document.createElement("input");
+    input.type = "number";
+    input.step = key === "included_miles" ? "1" : "0.01";
+    input.value = Number(values[key] ?? 0);
+    input.dataset.plan = plan;
+    input.dataset.param = key;
+    if (shared) {
+      input.dataset.sharedPlan = plan;
+    } else {
+      input.dataset.segment = segment;
+    }
+    wrap.appendChild(input);
+    grid.appendChild(wrap);
+  });
+
+  card.appendChild(grid);
+  return card;
 }
 
 function renderOptimizationBounds(basePricing) {
@@ -1127,8 +1168,12 @@ function defaultBounds(param, current) {
 }
 
 // Form collectors and client-side validation.
-function collectPricingInputs() {
+function collectPricingInputs(segments) {
   const pricing = {};
+  (segments || []).forEach((segment) => {
+    pricing[segment] = {};
+  });
+
   document.querySelectorAll("#pricingControls input[data-segment]").forEach((input) => {
     const segment = input.dataset.segment;
     const plan = input.dataset.plan;
@@ -1137,6 +1182,21 @@ function collectPricingInputs() {
     if (!pricing[segment][plan]) pricing[segment][plan] = {};
     pricing[segment][plan][param] = Number(input.value);
   });
+
+  // Free Plan pricing is edited once and shared; apply it to every segment.
+  const sharedPlanValues = {};
+  document.querySelectorAll("#pricingControls input[data-shared-plan]").forEach((input) => {
+    const plan = input.dataset.sharedPlan;
+    const param = input.dataset.param;
+    if (!sharedPlanValues[plan]) sharedPlanValues[plan] = {};
+    sharedPlanValues[plan][param] = Number(input.value);
+  });
+  Object.entries(sharedPlanValues).forEach(([plan, values]) => {
+    Object.keys(pricing).forEach((segment) => {
+      pricing[segment][plan] = { ...values };
+    });
+  });
+
   return pricing;
 }
 
