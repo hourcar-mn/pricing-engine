@@ -164,16 +164,12 @@
         <label>Forecast months
           <input id="horizonMonths" type="number" min="1" max="36" step="1" value="12">
         </label>
-        <label>Future market size multiplier
-          <input id="marketMultiplier" type="number" min="0.1" max="5" step="0.05" value="1" title="Future market size is forecast from same-month-of-year training averages, then multiplied by this value.">
-        </label>
         <label class="check">
           <input id="whatDropLatest" type="checkbox" checked>
           Exclude latest incomplete month
         </label>
       </div>
-      <p class="field-help">Select one or more mobility plan. Each selected mobility plan is estimated and forecast separately, using the same training/forecast window and model settings below, and all results are shown together.</p>
-
+      <p class="field-help"><br>Select one or more mobility plan. Each selected mobility plan is estimated and forecast separately, using the same model parameters, and all results are shown together.</p>
       <fieldset class="advanced-params-toggle">
         <label class="check">
           <input id="whatShowAdvanced" type="checkbox">
@@ -182,7 +178,13 @@
       </fieldset>
 
       <div id="whatAdvancedParams" style="display: none;">
-        <p class="field-help wide-field"><br>Future market size is forecast from the training data. For each future month, the dashboard uses the average number of in-market users from the same calendar month in training, then multiplies it by the future market size multiplier. If that calendar month is not present in training, it uses the overall training average.</p>
+          <fieldset class="model-spec-controls">
+          <legend>Market size</legend>
+          <p class="field-help wide-field">Future market size is forecast from the training data. For each future month, the dashboard uses the average number of in-market users from the same calendar month in training, then multiplies it by the future market size multiplier. If that calendar month is not present in training, it uses the overall training average.</p>
+        <label>Future market size multiplier
+          <input id="marketMultiplier" type="number" min="0.1" max="5" step="0.05" value="1" title="Future market size is forecast from same-month-of-year training averages, then multiplied by this value.">
+        </label>
+        </fieldset>
         <fieldset class="model-spec-controls">
           <legend>Model specification</legend>
           <p class="field-help wide-field">Choose deterministic utility terms. Expected payment is required for what-if analysis because prices must affect predicted demand.</p>

@@ -273,7 +273,7 @@ function renderWhatSegmentCheckboxes(segments) {
     const input = document.createElement("input");
     input.type = "checkbox";
     input.value = segmentInfo.segment;
-    input.checked = segmentInfo.segment === "Regular";
+    input.checked = true;
     label.appendChild(input);
     label.appendChild(document.createTextNode(displaySegmentLabel(segmentInfo.segment)));
     group.appendChild(label);
@@ -613,7 +613,7 @@ function renderWhatIfMulti(entries) {
   successful.forEach(({ segment, result }) => {
     const details = document.createElement("details");
     details.className = "segment-result";
-    details.open = true;
+    details.open = false;
     const summary = document.createElement("summary");
     summary.textContent = `Segment: ${displaySegmentLabel(segment)}`;
     details.appendChild(summary);
@@ -628,28 +628,127 @@ function renderWhatIfComparison(successful) {
     const whatIf = result.monthly.filter((row) => row.scenario === "What-if pricing");
     const currentTotals = scenarioTotals(current);
     const whatIfTotals = scenarioTotals(whatIf);
+    const months = Math.max(1, current.length);
     return {
       segment,
+      months,
       currentTotals,
       whatIfTotals,
+      priceCoefficient: result.price_coefficient,
     };
   });
 
-  return table(
-    ["Segment", "Current revenue", "What-if revenue", "Revenue change", "Current avg monthly trips", "What-if avg monthly trips", "Avg monthly trip change"],
-    rows.map(({ segment, currentTotals, whatIfTotals }) => {
-      const months = Math.max(1, successful.find((entry) => entry.segment === segment).result.monthly.filter((row) => row.scenario === "Current pricing").length);
-      return [
+  // Aggregate across every selected segment for a bottom "Total" row. Revenue
+  // sums directly; average monthly trips sums each segment's own monthly
+  // average (segments share the same forecast horizon, so this is the
+  // combined average monthly trip volume across all of them).
+  const totals = rows.reduce(
+    (acc, row) => {
+      acc.currentRevenue += row.currentTotals.revenue;
+      acc.whatIfRevenue += row.whatIfTotals.revenue;
+      acc.currentAvgTrips += row.currentTotals.trips / row.months;
+      acc.whatIfAvgTrips += row.whatIfTotals.trips / row.months;
+      return acc;
+    },
+    { currentRevenue: 0, whatIfRevenue: 0, currentAvgTrips: 0, whatIfAvgTrips: 0 }
+  );
+
+  const headers = [
+    "Segment",
+    "Current revenue",
+    "What-if revenue",
+    "Revenue change",
+    "Revenue % change",
+    "Current avg monthly trips",
+    "What-if avg monthly trips",
+    "Avg monthly trip change",
+    "Trip % change",
+  ];
+
+  const dataRows = rows.map(({ segment, months, currentTotals, whatIfTotals }) => {
+    const currentAvgTrips = currentTotals.trips / months;
+    const whatIfAvgTrips = whatIfTotals.trips / months;
+    return {
+      values: [
         displaySegmentLabel(segment),
         fmtMoney.format(currentTotals.revenue),
         fmtMoney.format(whatIfTotals.revenue),
         signedMoney(whatIfTotals.revenue - currentTotals.revenue),
-        fmtNum.format(currentTotals.trips / months),
-        fmtNum.format(whatIfTotals.trips / months),
-        signedNumber((whatIfTotals.trips - currentTotals.trips) / months),
-      ];
-    })
-  );
+        signedPercentChange(currentTotals.revenue, whatIfTotals.revenue),
+        fmtNum.format(currentAvgTrips),
+        fmtNum.format(whatIfAvgTrips),
+        signedNumber(whatIfAvgTrips - currentAvgTrips),
+        signedPercentChange(currentAvgTrips, whatIfAvgTrips),
+      ],
+    };
+  });
+
+  const totalRow = {
+    values: [
+      "Total",
+      fmtMoney.format(totals.currentRevenue),
+      fmtMoney.format(totals.whatIfRevenue),
+      signedMoney(totals.whatIfRevenue - totals.currentRevenue),
+      signedPercentChange(totals.currentRevenue, totals.whatIfRevenue),
+      fmtNum.format(totals.currentAvgTrips),
+      fmtNum.format(totals.whatIfAvgTrips),
+      signedNumber(totals.whatIfAvgTrips - totals.currentAvgTrips),
+      signedPercentChange(totals.currentAvgTrips, totals.whatIfAvgTrips),
+    ],
+    emphasize: true,
+  };
+
+  const wrap = document.createElement("div");
+  wrap.appendChild(renderPriceCoefficientSignBanner(rows));
+  wrap.appendChild(tableWithRowOptions(headers, [...dataRows, totalRow]));
+  return wrap;
+}
+
+// A single banner summarizing whether the estimated price coefficients are
+// negative (expected: higher prices reduce predicted demand), positive
+// (counter to theory, worth investigating), or mixed across the selected
+// segments — without listing coefficients per segment.
+function renderPriceCoefficientSignBanner(rows) {
+  const coefficients = rows
+    .map((row) => Number(row.priceCoefficient))
+    .filter((value) => Number.isFinite(value));
+
+  const banner = document.createElement("div");
+  banner.className = "notice";
+
+  if (!coefficients.length) {
+    banner.classList.add("warn");
+    banner.textContent = "Price coefficient was not estimated for any selected segment.";
+    return banner;
+  }
+
+  const allNegative = coefficients.every((value) => value < 0);
+  const allPositive = coefficients.every((value) => value > 0);
+
+  if (allNegative) {
+    banner.classList.add("good");
+    banner.textContent = "Price coefficients are negative for all selected segments, as expected.";
+  } else if (allPositive) {
+    banner.classList.add("danger");
+    banner.textContent = "Price coefficients are positive for all selected segments. Please investigate before trusting these results.";
+  } else {
+    banner.classList.add("warn");
+    banner.textContent = "Price coefficients are mixed across selected segments. Please investigate before trusting these results.";
+  }
+
+  return banner;
+}
+
+// Percent change between two values, signed and formatted (e.g. "+12.3%").
+// Returns "n/a" when the base is zero or either value is not finite, since a
+// percent change is undefined from a zero base.
+function signedPercentChange(from, to) {
+  const base = Number(from);
+  const updated = Number(to);
+  if (!Number.isFinite(base) || !Number.isFinite(updated) || base === 0) return "n/a";
+  const change = (updated - base) / base;
+  const sign = change > 0 ? "+" : "";
+  return `${sign}${(change * 100).toFixed(1)}%`;
 }
 
 function buildWhatIfSection(result) {
@@ -2019,6 +2118,42 @@ function table(headers, rows) {
   rows.forEach((row) => {
     const bodyTr = document.createElement("tr");
     row.forEach((value) => {
+      const td = document.createElement("td");
+      td.textContent = value;
+      bodyTr.appendChild(td);
+    });
+    tbody.appendChild(bodyTr);
+  });
+  tableEl.appendChild(tbody);
+  wrap.appendChild(tableEl);
+  return wrap;
+}
+
+// Like table(), but each row can carry { values, emphasize } so a summary
+// row (e.g. a trailing "Total") can be visually set apart without a
+// dedicated CSS class.
+function tableWithRowOptions(headers, rows) {
+  const wrap = document.createElement("div");
+  wrap.className = "table-wrap";
+  const tableEl = document.createElement("table");
+  const thead = document.createElement("thead");
+  const tr = document.createElement("tr");
+  headers.forEach((header) => {
+    const th = document.createElement("th");
+    th.textContent = header;
+    tr.appendChild(th);
+  });
+  thead.appendChild(tr);
+  tableEl.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  rows.forEach(({ values, emphasize }) => {
+    const bodyTr = document.createElement("tr");
+    if (emphasize) {
+      bodyTr.style.fontWeight = "700";
+      bodyTr.style.borderTop = "2px solid var(--line)";
+    }
+    values.forEach((value) => {
       const td = document.createElement("td");
       td.textContent = value;
       bodyTr.appendChild(td);
