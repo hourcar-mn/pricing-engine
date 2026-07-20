@@ -699,7 +699,38 @@ function renderWhatIfComparison(successful) {
   };
 
   const wrap = document.createElement("div");
+
+  // Add price coefficient warnings
   wrap.appendChild(renderPriceCoefficientSignBanner(rows));
+
+  // Add download button
+  const downloadButton = document.createElement("button");
+  downloadButton.type = "button";
+  downloadButton.textContent = "Download CSV";
+  downloadButton.style.margin = "0 0 12px";
+  downloadButton.addEventListener("click", () => {
+    const csvRows = [...dataRows, totalRow].map((row) => row.values);
+    const summaryCsv = rowsToCsv(headers, csvRows);
+    const pricingSections = successful.map(({ segment, result }, index) => {
+      const titleLine = rowsToCsv([`Pricing rules: ${displaySegmentLabel(segment)}`], []);
+      const pricingCsv = rowsToCsv(
+        ["Plan", "Parameter", "Current", "What-if", "Change"],
+        pricingComparisonRows(result.pricing, { includeFreePlan: index === 0 })
+      );
+      return `${titleLine}\r\n${pricingCsv}`;
+    });
+    const freePlanNote =
+      successful.length > 1
+        ? rowsToCsv(["Note: Free Plan pricing is identical across segments and is shown once above."], [])
+        : null;
+
+    const sections = [summaryCsv, ...pricingSections];
+    if (freePlanNote) sections.push(freePlanNote);
+    downloadCsv("segment-comparison.csv", sections.join("\r\n\r\n"));
+  });
+  wrap.appendChild(downloadButton);
+
+  // Append table
   wrap.appendChild(tableWithRowOptions(headers, [...dataRows, totalRow]));
   return wrap;
 }
@@ -911,6 +942,30 @@ function buildWhatIfSection(result) {
   );
 
   return container;
+}
+
+// Formats headers + string rows as CSV text, quoting any value that contains
+// a comma, quote, or newline (doubling embedded quotes per the CSV spec).
+function rowsToCsv(headers, rows) {
+  const escapeCsvValue = (value) => {
+    const str = String(value ?? "");
+    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  };
+  const lines = [headers, ...rows].map((row) => row.map(escapeCsvValue).join(","));
+  return lines.join("\r\n");
+}
+
+// Triggers a browser download of the given text content as a named file.
+function downloadCsv(filename, csvContent) {
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 function renderOptimization(result) {
@@ -1904,20 +1959,26 @@ function renderExpectedPriceChart(
   return wrap;
 }
 
-function renderPricingComparison(pricing) {
+const PRICING_COMPARISON_PARAMS = [
+  ["trip_start_fee", "Trip start fee"],
+  ["per_minute", "Per minute"],
+  ["per_hour", "Per hour"],
+  ["per_day", "Per day"],
+  ["included_miles", "Included miles"],
+  ["extra_mile", "Extra-mile fee"],
+  ["monthly_fee", "Monthly fee"],
+  ["monthly_credit", "Monthly credit"],
+];
+
+// Plan/parameter rows comparing current vs. what-if pricing. Shared by the
+// on-page table (renderPricingComparison) and the Segment Comparison CSV
+// export, so both always show the same pricing rules.
+function pricingComparisonRows(pricing, { includeFreePlan = true } = {}) {
   const rows = [];
   Object.entries(pricing.current).forEach(([plan, currentValues]) => {
+    if (!includeFreePlan && plan === FREE_PLAN_NAME) return;
     const whatIfValues = pricing.what_if[plan] || {};
-    [
-      ["trip_start_fee", "Trip start fee"],
-      ["per_minute", "Per minute"],
-      ["per_hour", "Per hour"],
-      ["per_day", "Per day"],
-      ["included_miles", "Included miles"],
-      ["extra_mile", "Extra-mile fee"],
-      ["monthly_fee", "Monthly fee"],
-      ["monthly_credit", "Monthly credit"],
-    ].forEach(([key, label]) => {
+    PRICING_COMPARISON_PARAMS.forEach(([key, label]) => {
       rows.push([
         plan,
         label,
@@ -1927,7 +1988,11 @@ function renderPricingComparison(pricing) {
       ]);
     });
   });
-  return table(["Plan", "Parameter", "Current", "What-if", "Change"], rows);
+  return rows;
+}
+
+function renderPricingComparison(pricing) {
+  return table(["Plan", "Parameter", "Current", "What-if", "Change"], pricingComparisonRows(pricing));
 }
 
 function renderConstraintTable(constraint) {
