@@ -52,6 +52,19 @@ const fmtNum = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
+// Segment values that should read as "Standard" in the UI, regardless of how
+// the backend labels them. API calls still use the real segment value below;
+// this only changes what's displayed.
+const segmentDisplayOverrides = {
+  regular: "Standard",
+  everyday: "Standard",
+};
+
+function displaySegmentLabel(segment) {
+  const key = String(segment || "").trim().toLowerCase();
+  return segmentDisplayOverrides[key] || segment;
+}
+
 const colors = {
   actual: "#1f6f78",
   predicted: "#c84b31",
@@ -205,7 +218,7 @@ async function loadOptions() {
     options.segments.forEach((segmentInfo) => {
       const option = document.createElement("option");
       option.value = segmentInfo.segment;
-      option.textContent = segmentInfo.segment;
+      option.textContent = displaySegmentLabel(segmentInfo.segment);
       select.appendChild(option);
     });
   });
@@ -252,7 +265,7 @@ function renderWhatSegmentCheckboxes(segments) {
     input.value = segmentInfo.segment;
     input.checked = segmentInfo.segment === "Regular";
     label.appendChild(input);
-    label.appendChild(document.createTextNode(segmentInfo.segment));
+    label.appendChild(document.createTextNode(displaySegmentLabel(segmentInfo.segment)));
     group.appendChild(label);
   });
 }
@@ -575,7 +588,7 @@ function renderWhatIfMulti(entries) {
   failed.forEach((entry) => {
     const box = document.createElement("div");
     box.className = "error-box";
-    box.textContent = `Segment ${entry.segment}: ${entry.error && entry.error.message ? entry.error.message : entry.error}`;
+    box.textContent = `Segment ${displaySegmentLabel(entry.segment)}: ${entry.error && entry.error.message ? entry.error.message : entry.error}`;
     output.appendChild(box);
   });
 
@@ -592,7 +605,7 @@ function renderWhatIfMulti(entries) {
     details.className = "segment-result";
     details.open = true;
     const summary = document.createElement("summary");
-    summary.textContent = `Segment: ${segment}`;
+    summary.textContent = `Segment: ${displaySegmentLabel(segment)}`;
     details.appendChild(summary);
     details.appendChild(buildWhatIfSection(result));
     output.appendChild(details);
@@ -617,7 +630,7 @@ function renderWhatIfComparison(successful) {
     rows.map(({ segment, currentTotals, whatIfTotals }) => {
       const months = Math.max(1, successful.find((entry) => entry.segment === segment).result.monthly.filter((row) => row.scenario === "Current pricing").length);
       return [
-        segment,
+        displaySegmentLabel(segment),
         fmtMoney.format(currentTotals.revenue),
         fmtMoney.format(whatIfTotals.revenue),
         signedMoney(whatIfTotals.revenue - currentTotals.revenue),
@@ -984,7 +997,7 @@ function renderPricingControls(basePricingBySegment) {
 
     const segmentTitle = document.createElement("h3");
     segmentTitle.className = "pricing-segment-title";
-    segmentTitle.textContent = `Segment: ${segment}`;
+    segmentTitle.textContent = `Segment: ${displaySegmentLabel(segment)}`;
     segmentBlock.appendChild(segmentTitle);
 
     const cardsWrap = document.createElement("div");
@@ -1268,7 +1281,7 @@ function renderRunHeader(result) {
   box.innerHTML = `
     <div>
       <span class="eyebrow">Segment</span>
-      <strong>${escapeHtml(result.config.segment)}</strong>
+      <strong>${escapeHtml(displaySegmentLabel(result.config.segment))}</strong>
     </div>
     <div>
       <span class="eyebrow">Training months</span>
