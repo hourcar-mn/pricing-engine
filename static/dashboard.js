@@ -239,7 +239,7 @@ async function loadOptions() {
   document.getElementById("whatTrainStart").value = defaults.train_start;
   document.getElementById("whatTrainEnd").value = defaults.what_if_train_end;
   document.getElementById("forecastStart").value = defaults.forecast_start;
-  document.getElementById("horizonMonths").value = 6;
+  document.getElementById("horizonMonths").value = 12;
   document.getElementById("marketMultiplier").value = 1;
 
   document.getElementById("optSegment").value = "Regular";
@@ -995,7 +995,7 @@ function renderPricingControls(basePricingBySegment) {
   const help = document.createElement("p");
   help.className = "field-help";
   help.textContent =
-    "Edit absolute pricing parameters. Leaving a field equal to its loaded value means the current real-world value is used. Free Plan pricing does not vary by segment, so it is loaded once and applies to every selected segment; other plans are shown per segment, side by side.";
+    "Edit absolute pricing parameters. Leaving a field equal to its loaded value means the current real-world value is used.";
   container.appendChild(help);
 
   // Free Plan pricing is identical across segments, so only load and show one
@@ -1037,7 +1037,7 @@ function buildPricingCard(plan, values, { segment, shared, subtitle } = {}) {
   if (segment) card.dataset.segment = segment;
 
   const title = document.createElement("h3");
-  title.textContent = plan;
+  title.textContent = plan === "Everyday" ? "Standard" : plan;
   card.appendChild(title);
 
   if (subtitle) {
