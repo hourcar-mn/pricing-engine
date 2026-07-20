@@ -558,23 +558,6 @@ th {
   margin-top: 16px;
 }
 
-.pricing-segment-block {
-  grid-column: 1 / -1;
-  padding-top: 6px;
-}
-
-.pricing-segment-block:not(:first-of-type) {
-  margin-top: 6px;
-  border-top: 1px solid var(--line);
-  padding-top: 16px;
-}
-
-.pricing-segment-title {
-  margin: 0 0 12px;
-  font-size: 15px;
-  color: var(--ink);
-}
-
 .pricing-card {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -583,8 +566,17 @@ th {
 }
 
 .pricing-card h3 {
-  margin: 0 0 12px;
+  margin: 0 0 4px;
   font-size: 16px;
+}
+
+.pricing-card-subtitle {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .pricing-card .pricing-grid,

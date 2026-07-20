@@ -995,57 +995,42 @@ function renderPricingControls(basePricingBySegment) {
   const help = document.createElement("p");
   help.className = "field-help";
   help.textContent =
-    "Edit absolute pricing parameters. Leaving a field equal to its loaded value means the current real-world value is used. Free Plan pricing does not vary by segment, so it is loaded once and applies to every selected segment; other plans are edited per segment below.";
+    "Edit absolute pricing parameters. Leaving a field equal to its loaded value means the current real-world value is used. Free Plan pricing does not vary by segment, so it is loaded once and applies to every selected segment; other plans are shown per segment, side by side.";
   container.appendChild(help);
 
   // Free Plan pricing is identical across segments, so only load and show one
-  // card for it instead of repeating it inside every segment block.
+  // card for it instead of repeating it once per segment.
   const freePlanValues = segments
     .map((segment) => basePricingBySegment[segment].pricing[FREE_PLAN_NAME])
     .find((values) => values);
 
   if (freePlanValues) {
-    const freeBlock = document.createElement("div");
-    freeBlock.className = "pricing-segment-block";
-
-    const freeTitle = document.createElement("h3");
-    freeTitle.className = "pricing-segment-title";
-    freeTitle.textContent = `${FREE_PLAN_NAME} (shared across all selected segments)`;
-    freeBlock.appendChild(freeTitle);
-
-    const cardsWrap = document.createElement("div");
-    cardsWrap.className = "pricing-grid";
-    cardsWrap.appendChild(buildPricingCard(FREE_PLAN_NAME, freePlanValues, { shared: true }));
-    freeBlock.appendChild(cardsWrap);
-    container.appendChild(freeBlock);
+    container.appendChild(
+      buildPricingCard(FREE_PLAN_NAME, freePlanValues, {
+        shared: true,
+        subtitle: "\n",
+      })
+    );
   }
 
+  // All other plan cards flow into the same grid as the Free Plan card, side
+  // by side, rather than each segment getting its own full-width block. The
+  // subtitle on each card identifies which segment it belongs to.
   segments.forEach((segment) => {
     const basePricing = basePricingBySegment[segment];
-    const otherPlans = Object.entries(basePricing.pricing).filter(([plan]) => plan !== FREE_PLAN_NAME);
-    if (!otherPlans.length) return;
-
-    const segmentBlock = document.createElement("div");
-    segmentBlock.className = "pricing-segment-block";
-
-    const segmentTitle = document.createElement("h3");
-    segmentTitle.className = "pricing-segment-title";
-    segmentTitle.textContent = `Segment: ${displaySegmentLabel(segment)}`;
-    segmentBlock.appendChild(segmentTitle);
-
-    const cardsWrap = document.createElement("div");
-    cardsWrap.className = "pricing-grid";
-
-    otherPlans.forEach(([plan, values]) => {
-      cardsWrap.appendChild(buildPricingCard(plan, values, { segment }));
+    Object.entries(basePricing.pricing).forEach(([plan, values]) => {
+      if (plan === FREE_PLAN_NAME) return;
+      container.appendChild(
+        buildPricingCard(plan, values, {
+          segment,
+          subtitle: `\n`,
+        })
+      );
     });
-
-    segmentBlock.appendChild(cardsWrap);
-    container.appendChild(segmentBlock);
   });
 }
 
-function buildPricingCard(plan, values, { segment, shared } = {}) {
+function buildPricingCard(plan, values, { segment, shared, subtitle } = {}) {
   const card = document.createElement("div");
   card.className = "pricing-card";
   card.dataset.plan = plan;
@@ -1054,6 +1039,13 @@ function buildPricingCard(plan, values, { segment, shared } = {}) {
   const title = document.createElement("h3");
   title.textContent = plan;
   card.appendChild(title);
+
+  if (subtitle) {
+    const sub = document.createElement("p");
+    sub.className = "pricing-card-subtitle";
+    sub.textContent = subtitle;
+    card.appendChild(sub);
+  }
 
   const grid = document.createElement("div");
   grid.className = "pricing-grid";
