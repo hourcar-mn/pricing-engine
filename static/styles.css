@@ -139,6 +139,46 @@ textarea {
   width: auto;
 }
 
+/* Multi-segment checkbox selector (What-if tab). */
+.segment-check-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  grid-column: span 2;
+}
+
+.segment-check-field .field-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.segment-checkbox-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.segment-checkbox-row label {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  font-weight: 400;
+  font-size: 14px;
+  min-height: auto;
+}
+
+.segment-checkbox-row input[type="checkbox"] {
+  width: auto;
+}
+
 .model-spec-controls,
 .bin-spec-controls,
 .kernel-spec-controls,
@@ -364,6 +404,45 @@ textarea {
   font-size: 18px;
 }
 
+/* Per-segment result containers on the What-if tab. */
+.segment-result {
+  margin-top: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px 16px 16px;
+  background: #fdfefe;
+}
+
+.segment-result > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.segment-result > summary::-webkit-details-marker {
+  display: none;
+}
+
+.segment-result > summary::before {
+  content: "\25BC";
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.segment-result:not([open]) > summary::before {
+  transform: rotate(-90deg);
+}
+
+.segment-result > .result-section:first-of-type {
+  margin-top: 4px;
+}
+
 /* Tables and charts. */
 .chart-wrap {
   border: 1px solid var(--line);
@@ -479,6 +558,23 @@ th {
   margin-top: 16px;
 }
 
+.pricing-segment-block {
+  grid-column: 1 / -1;
+  padding-top: 6px;
+}
+
+.pricing-segment-block:not(:first-of-type) {
+  margin-top: 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.pricing-segment-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: var(--ink);
+}
+
 .pricing-card {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -536,6 +632,7 @@ th {
   border: 1px solid #f1b3ad;
   border-radius: 6px;
   padding: 10px;
+  margin-top: 10px;
 }
 
 /* Narrow-screen adjustments. */
@@ -551,5 +648,8 @@ th {
   }
   .chart-grid {
     grid-template-columns: 1fr;
+  }
+  .segment-check-field {
+    grid-column: span 1;
   }
 }

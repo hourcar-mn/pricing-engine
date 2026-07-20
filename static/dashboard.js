@@ -172,7 +172,7 @@ function bindForms() {
     });
   });
 
-  document.getElementById("whatSegment").addEventListener("change", () => {
+  document.getElementById("whatSegmentGroup").addEventListener("change", () => {
     state.basePricing = null;
     document.getElementById("pricingControls").innerHTML = "";
   });
@@ -199,7 +199,7 @@ async function loadOptions() {
   const options = await apiGet("/api/options");
   state.options = options;
 
-  ["valSegment", "whatSegment", "optSegment"].forEach((id) => {
+  ["valSegment", "optSegment"].forEach((id) => {
     const select = document.getElementById(id);
     select.innerHTML = "";
     options.segments.forEach((segmentInfo) => {
@@ -210,6 +210,8 @@ async function loadOptions() {
     });
   });
 
+  renderWhatSegmentCheckboxes(options.segments);
+
   const defaults = options.defaults;
   document.getElementById("valSegment").value = "Regular";
   document.getElementById("valTrainStart").value = defaults.train_start;
@@ -217,7 +219,6 @@ async function loadOptions() {
   document.getElementById("valTestStart").value = defaults.test_start;
   document.getElementById("valTestEnd").value = defaults.test_end;
 
-  document.getElementById("whatSegment").value = "Regular";
   document.getElementById("whatTrainStart").value = defaults.train_start;
   document.getElementById("whatTrainEnd").value = defaults.what_if_train_end;
   document.getElementById("forecastStart").value = defaults.forecast_start;
@@ -240,17 +241,52 @@ async function loadOptions() {
   setStatus("Ready");
 }
 
+function renderWhatSegmentCheckboxes(segments) {
+  const group = document.getElementById("whatSegmentGroup");
+  if (!group) return;
+  group.innerHTML = "";
+  segments.forEach((segmentInfo) => {
+    const label = document.createElement("label");
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = segmentInfo.segment;
+    input.checked = segmentInfo.segment === "Regular";
+    label.appendChild(input);
+    label.appendChild(document.createTextNode(segmentInfo.segment));
+    group.appendChild(label);
+  });
+}
+
+function getSelectedWhatSegments() {
+  return [...document.querySelectorAll("#whatSegmentGroup input:checked")].map((input) => input.value);
+}
+
 async function loadBasePricing() {
+  const segments = getSelectedWhatSegments();
+  const container = document.getElementById("pricingControls");
+  if (!segments.length) {
+    state.basePricing = null;
+    container.innerHTML = '<p class="field-help">Select at least one segment above to load pricing.</p>';
+    return;
+  }
+
   setStatus("Loading pricing...");
-  const segment = document.getElementById("whatSegment").value;
   const trainEnd = document.getElementById("whatTrainEnd").value;
   const dropLatest = document.getElementById("whatDropLatest").checked;
-  const params = new URLSearchParams({
-    segment,
-    train_end: trainEnd,
-    drop_latest: String(dropLatest),
-  });
-  state.basePricing = await apiGet(`/api/base-pricing?${params.toString()}`);
+
+  const entries = await Promise.all(
+    segments.map(async (segment) => {
+      const params = new URLSearchParams({
+        segment,
+        train_end: trainEnd,
+        drop_latest: String(dropLatest),
+      });
+      const data = await apiGet(`/api/base-pricing?${params.toString()}`);
+      return [segment, data];
+    })
+  );
+
+  state.basePricing = Object.fromEntries(entries);
   renderPricingControls(state.basePricing);
   setStatus("Ready");
 }
@@ -306,16 +342,29 @@ async function runValidation() {
 
 async function runWhatIf() {
   const output = document.getElementById("whatIfOutput");
-  setLoading(output, "Estimating model and forecasting what-if scenario...");
+  const segments = getSelectedWhatSegments();
 
-  if (!state.basePricing) {
+  if (!segments.length) {
+    renderError(output, new Error("Select at least one segment to run the what-if analysis."));
+    setStatus("Error");
+    return;
+  }
+
+  setLoading(
+    output,
+    `Estimating model${segments.length > 1 ? "s" : ""} and forecasting what-if scenario for ${segments.length} segment${
+      segments.length > 1 ? "s" : ""
+    }...`
+  );
+
+  const missingPricing = !state.basePricing || segments.some((segment) => !state.basePricing[segment]);
+  if (missingPricing) {
     await loadBasePricing();
   }
 
-  let payload;
+  let basePayload;
   try {
-    payload = {
-      segment: document.getElementById("whatSegment").value,
+    basePayload = {
       train_start: document.getElementById("whatTrainStart").value,
       train_end: document.getElementById("whatTrainEnd").value,
       forecast_start: document.getElementById("forecastStart").value,
@@ -325,7 +374,6 @@ async function runWhatIf() {
       model_spec: collectModelSpec("what"),
       bin_spec: collectBinSpec("what"),
       kernel_spec: collectKernelSpec("what"),
-      pricing: collectPricingInputs(),
     };
   } catch (error) {
     renderError(output, error);
@@ -333,15 +381,28 @@ async function runWhatIf() {
     return;
   }
 
-  try {
-    setStatus("Running what-if...");
-    const result = await apiPost("/api/what-if", payload);
-    renderWhatIf(result);
-    setStatus("Ready");
-  } catch (error) {
-    renderError(output, error);
-    setStatus("Error");
-  }
+  const pricingBySegment = collectPricingInputs();
+
+  setStatus(`Running what-if for ${segments.length} segment${segments.length > 1 ? "s" : ""}...`);
+  const settled = await Promise.allSettled(
+    segments.map((segment) =>
+      apiPost("/api/what-if", {
+        ...basePayload,
+        segment,
+        pricing: pricingBySegment[segment],
+      }).then((result) => ({ segment, result }))
+    )
+  );
+
+  const entries = settled.map((outcome, index) => {
+    if (outcome.status === "fulfilled") {
+      return outcome.value;
+    }
+    return { segment: segments[index], error: outcome.reason };
+  });
+
+  renderWhatIfMulti(entries);
+  setStatus(entries.some((entry) => entry.error) ? "Completed with errors" : "Ready");
 }
 
 async function runOptimization() {
@@ -504,8 +565,72 @@ function renderValidation(result) {
   );
 }
 
-function renderWhatIf(result) {
+function renderWhatIfMulti(entries) {
   const output = document.getElementById("whatIfOutput");
+  output.innerHTML = "";
+
+  const successful = entries.filter((entry) => entry.result);
+  const failed = entries.filter((entry) => entry.error);
+
+  failed.forEach((entry) => {
+    const box = document.createElement("div");
+    box.className = "error-box";
+    box.textContent = `Segment ${entry.segment}: ${entry.error && entry.error.message ? entry.error.message : entry.error}`;
+    output.appendChild(box);
+  });
+
+  if (!successful.length) {
+    return;
+  }
+
+  if (successful.length > 1) {
+    output.appendChild(renderSection("Segment Comparison", renderWhatIfComparison(successful)));
+  }
+
+  successful.forEach(({ segment, result }) => {
+    const details = document.createElement("details");
+    details.className = "segment-result";
+    details.open = true;
+    const summary = document.createElement("summary");
+    summary.textContent = `Segment: ${segment}`;
+    details.appendChild(summary);
+    details.appendChild(buildWhatIfSection(result));
+    output.appendChild(details);
+  });
+}
+
+function renderWhatIfComparison(successful) {
+  const rows = successful.map(({ segment, result }) => {
+    const current = result.monthly.filter((row) => row.scenario === "Current pricing");
+    const whatIf = result.monthly.filter((row) => row.scenario === "What-if pricing");
+    const currentTotals = scenarioTotals(current);
+    const whatIfTotals = scenarioTotals(whatIf);
+    return {
+      segment,
+      currentTotals,
+      whatIfTotals,
+    };
+  });
+
+  return table(
+    ["Segment", "Current revenue", "What-if revenue", "Revenue change", "Current avg monthly trips", "What-if avg monthly trips", "Avg monthly trip change"],
+    rows.map(({ segment, currentTotals, whatIfTotals }) => {
+      const months = Math.max(1, successful.find((entry) => entry.segment === segment).result.monthly.filter((row) => row.scenario === "Current pricing").length);
+      return [
+        segment,
+        fmtMoney.format(currentTotals.revenue),
+        fmtMoney.format(whatIfTotals.revenue),
+        signedMoney(whatIfTotals.revenue - currentTotals.revenue),
+        fmtNum.format(currentTotals.trips / months),
+        fmtNum.format(whatIfTotals.trips / months),
+        signedNumber((whatIfTotals.trips - currentTotals.trips) / months),
+      ];
+    })
+  );
+}
+
+function buildWhatIfSection(result) {
+  const container = document.createElement("div");
   const current = result.monthly.filter((row) => row.scenario === "Current pricing");
   const whatIf = result.monthly.filter((row) => row.scenario === "What-if pricing");
   const paidPlan = paidPlanName(result);
@@ -545,10 +670,9 @@ function renderWhatIf(result) {
     ["current_predicted_trips", "what_if_predicted_trips"]
   );
 
-  output.innerHTML = "";
-  output.appendChild(renderRunHeader(result));
-  output.appendChild(renderWarnings(result.warnings));
-  output.appendChild(
+  container.appendChild(renderRunHeader(result));
+  container.appendChild(renderWarnings(result.warnings));
+  container.appendChild(
     renderKpis([
       ["Price coefficient", formatCoef(result.price_coefficient)],
       ["Current forecast revenue", fmtMoney.format(currentTotals.revenue)],
@@ -563,15 +687,15 @@ function renderWhatIf(result) {
     ])
   );
 
-  output.appendChild(renderSection("Forecast Market Size", renderMarketSizeInfo(result, current)));
-  output.appendChild(renderSection("Model Specification", renderModelSpec(result.model_spec)));
-  output.appendChild(renderSection("Estimation Fit Summary", renderFitSummary(result.fit_summary)));
-  output.appendChild(renderSection("Bins and Kernel", renderBinningKernelInfo(result)));
-  output.appendChild(renderSection("Kernel Distribution Explorer", renderKernelExplorer(result.kernel_details)));
-  output.appendChild(renderSection("Estimated Utility Parameters", renderCoefficientTable(result.coefficients)));
-  output.appendChild(renderSection("Pricing Used In Forecast", renderPricingComparison(result.pricing)));
+  container.appendChild(renderSection("Forecast Market Size", renderMarketSizeInfo(result, current)));
+  container.appendChild(renderSection("Model Specification", renderModelSpec(result.model_spec)));
+  container.appendChild(renderSection("Estimation Fit Summary", renderFitSummary(result.fit_summary)));
+  container.appendChild(renderSection("Bins and Kernel", renderBinningKernelInfo(result)));
+  container.appendChild(renderSection("Kernel Distribution Explorer", renderKernelExplorer(result.kernel_details)));
+  container.appendChild(renderSection("Estimated Utility Parameters", renderCoefficientTable(result.coefficients)));
+  container.appendChild(renderSection("Pricing Used In Forecast", renderPricingComparison(result.pricing)));
 
-  output.appendChild(
+  container.appendChild(
     renderSection(
       "Forecast User-Payment Revenue",
       lineChart({
@@ -587,7 +711,7 @@ function renderWhatIf(result) {
     )
   );
 
-  output.appendChild(
+  container.appendChild(
     renderSection(
       "Forecast Trips By Plan",
       lineChart({
@@ -607,7 +731,7 @@ function renderWhatIf(result) {
     )
   );
 
-  output.appendChild(
+  container.appendChild(
     renderSection(
       "Average Monthly Trips By Plan: Current vs What-if Pricing",
       groupedBarChart({
@@ -623,7 +747,7 @@ function renderWhatIf(result) {
     )
   );
 
-  output.appendChild(
+  container.appendChild(
     renderSection(
       "Average Monthly Product Choices: Current vs What-if Pricing",
       groupedBarChart({
@@ -639,7 +763,7 @@ function renderWhatIf(result) {
     )
   );
 
-  output.appendChild(
+  container.appendChild(
     renderSection(
       "Average Monthly Product Choice Reallocation",
       divergingBarChart({
@@ -654,7 +778,7 @@ function renderWhatIf(result) {
     )
   );
 
-  output.appendChild(
+  container.appendChild(
     renderSection(
       "Expected User Payment By Product",
       renderExpectedPriceChart(whatIfProductRows, [
@@ -663,6 +787,8 @@ function renderWhatIf(result) {
       ], "Bars are forecast-month averages. For each product-month, the dashboard reprices the empirical kernel under the current or what-if tariff; if the kernel conditions on month-of-year, those month-specific expected payments are computed first and then averaged over the displayed forecast horizon.")
     )
   );
+
+  return container;
 }
 
 function renderOptimization(result) {
@@ -842,53 +968,71 @@ function renderOptimization(result) {
 }
 
 // Dynamic input controls for pricing and optimization bounds.
-function renderPricingControls(basePricing) {
+function renderPricingControls(basePricingBySegment) {
   const container = document.getElementById("pricingControls");
   container.innerHTML = "";
 
   const help = document.createElement("p");
   help.className = "field-help";
   help.textContent =
-    "Edit absolute pricing parameters. Leaving a field equal to its loaded value means the current real-world value is used.";
+    "Edit absolute pricing parameters for each selected segment. Leaving a field equal to its loaded value means the current real-world value is used for that segment.";
   container.appendChild(help);
 
-  Object.entries(basePricing.pricing).forEach(([plan, values]) => {
-    const card = document.createElement("div");
-    card.className = "pricing-card";
-    card.dataset.plan = plan;
+  Object.entries(basePricingBySegment).forEach(([segment, basePricing]) => {
+    const segmentBlock = document.createElement("div");
+    segmentBlock.className = "pricing-segment-block";
 
-    const title = document.createElement("h3");
-    title.textContent = plan;
-    card.appendChild(title);
+    const segmentTitle = document.createElement("h3");
+    segmentTitle.className = "pricing-segment-title";
+    segmentTitle.textContent = `Segment: ${segment}`;
+    segmentBlock.appendChild(segmentTitle);
 
-    const grid = document.createElement("div");
-    grid.className = "pricing-grid";
+    const cardsWrap = document.createElement("div");
+    cardsWrap.className = "pricing-grid";
 
-    [
-      ["trip_start_fee", "Trip start fee"],
-      ["per_minute", "Per minute"],
-      ["per_hour", "Per hour"],
-      ["per_day", "Per day"],
-      ["included_miles", "Included miles"],
-      ["extra_mile", "Extra-mile fee"],
-      ["monthly_fee", "Monthly fee"],
-      ["monthly_credit", "Monthly credit"],
-    ].forEach(([key, label]) => {
-      const wrap = document.createElement("label");
-      wrap.className = "pricing-field";
-      wrap.innerHTML = `<span>${label}</span>`;
-      const input = document.createElement("input");
-      input.type = "number";
-      input.step = key === "included_miles" ? "1" : "0.01";
-      input.value = Number(values[key] ?? 0);
-      input.dataset.plan = plan;
-      input.dataset.param = key;
-      wrap.appendChild(input);
-      grid.appendChild(wrap);
+    Object.entries(basePricing.pricing).forEach(([plan, values]) => {
+      const card = document.createElement("div");
+      card.className = "pricing-card";
+      card.dataset.plan = plan;
+      card.dataset.segment = segment;
+
+      const title = document.createElement("h3");
+      title.textContent = plan;
+      card.appendChild(title);
+
+      const grid = document.createElement("div");
+      grid.className = "pricing-grid";
+
+      [
+        ["trip_start_fee", "Trip start fee"],
+        ["per_minute", "Per minute"],
+        ["per_hour", "Per hour"],
+        ["per_day", "Per day"],
+        ["included_miles", "Included miles"],
+        ["extra_mile", "Extra-mile fee"],
+        ["monthly_fee", "Monthly fee"],
+        ["monthly_credit", "Monthly credit"],
+      ].forEach(([key, label]) => {
+        const wrap = document.createElement("label");
+        wrap.className = "pricing-field";
+        wrap.innerHTML = `<span>${label}</span>`;
+        const input = document.createElement("input");
+        input.type = "number";
+        input.step = key === "included_miles" ? "1" : "0.01";
+        input.value = Number(values[key] ?? 0);
+        input.dataset.segment = segment;
+        input.dataset.plan = plan;
+        input.dataset.param = key;
+        wrap.appendChild(input);
+        grid.appendChild(wrap);
+      });
+
+      card.appendChild(grid);
+      cardsWrap.appendChild(card);
     });
 
-    card.appendChild(grid);
-    container.appendChild(card);
+    segmentBlock.appendChild(cardsWrap);
+    container.appendChild(segmentBlock);
   });
 }
 
@@ -972,11 +1116,13 @@ function defaultBounds(param, current) {
 // Form collectors and client-side validation.
 function collectPricingInputs() {
   const pricing = {};
-  document.querySelectorAll("#pricingControls input").forEach((input) => {
+  document.querySelectorAll("#pricingControls input[data-segment]").forEach((input) => {
+    const segment = input.dataset.segment;
     const plan = input.dataset.plan;
     const param = input.dataset.param;
-    if (!pricing[plan]) pricing[plan] = {};
-    pricing[plan][param] = Number(input.value);
+    if (!pricing[segment]) pricing[segment] = {};
+    if (!pricing[segment][plan]) pricing[segment][plan] = {};
+    pricing[segment][plan][param] = Number(input.value);
   });
   return pricing;
 }
