@@ -306,6 +306,12 @@ textarea {
 .notice.warn { background: #fff8e6; border-color: #ead18c; color: var(--amber); }
 .notice.danger { background: #fff0ee; border-color: #f1b3ad; color: var(--red); }
 
+.notice.page-banner {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  font-weight: 700;
+}
+
 .model-spec-card {
   border: 1px solid var(--line);
   border-radius: 8px;
