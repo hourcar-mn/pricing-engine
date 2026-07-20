@@ -7,6 +7,12 @@
   so the folder can be handed off without a frontend build step.
 */
 
+// A fresh random seed so repeated optimization runs explore different
+// starting points by default; the user can still pin a value for reproducibility.
+function randomSeed() {
+  return Math.floor(Math.random() * 1_000_000) + 1;
+}
+
 const state = {
   options: null,
   basePricing: null,
@@ -251,7 +257,7 @@ async function loadOptions() {
   document.getElementById("optMaxDemandDropPct").value = 5;
   document.getElementById("optMaxEvaluations").value = 500;
   document.getElementById("optNumSeeds").value = 3;
-  document.getElementById("optSeed").value = 123;
+  document.getElementById("optSeed").value = randomSeed();
 
   await loadBasePricing();
   await loadOptimizationBounds();
