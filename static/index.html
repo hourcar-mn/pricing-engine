@@ -148,9 +148,10 @@
     <!-- What-if workflow: estimate on observed pricing, then forecast under user-edited tariff parameters. -->
     <section id="whatif" class="panel">
       <div class="control-grid">
-        <label>Segment
-          <select id="whatSegment"></select>
-        </label>
+        <div class="segment-check-field">
+          <span class="field-label">Segments</span>
+          <div id="whatSegmentGroup" class="segment-checkbox-row"></div>
+        </div>
         <label>Train start
           <input id="whatTrainStart" type="month">
         </label>
@@ -171,6 +172,7 @@
           Exclude latest incomplete month
         </label>
       </div>
+      <p class="field-help">Select one or more segments. Each selected segment is estimated and forecast separately, using the same training/forecast window and model settings below, and all results are shown together.</p>
 
       <fieldset class="advanced-params-toggle">
         <label class="check">
@@ -436,6 +438,6 @@
     </section>
   </main>
 
-  <script src="/dashboard.js?v=20260713-opt20"></script>
+  <script src="/dashboard.js?v=20260720-multiseg1"></script>
 </body>
 </html>
