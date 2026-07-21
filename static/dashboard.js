@@ -252,7 +252,7 @@ async function loadOptions() {
   document.getElementById("optTrainStart").value = defaults.train_start;
   document.getElementById("optTrainEnd").value = defaults.what_if_train_end;
   document.getElementById("optForecastStart").value = defaults.forecast_start;
-  document.getElementById("optHorizonMonths").value = 6;
+  document.getElementById("optHorizonMonths").value = 12;
   document.getElementById("optMarketMultiplier").value = 1;
   document.getElementById("optMaxDemandDropPct").value = 5;
   document.getElementById("optMaxEvaluations").value = 500;
@@ -1273,7 +1273,7 @@ function renderOptimizationBounds(basePricing) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><input type="checkbox" data-role="enabled" data-plan="${escapeHtml(row.plan)}" data-param="${escapeHtml(row.param)}"></td>
-      <td>${escapeHtml(row.plan)}</td>
+      <td>${escapeHtml(row.plan === "Everyday" ? "Standard" : row.plan)}</td>
       <td>${escapeHtml(pricingParameterLabels[row.param] || row.param)}</td>
       <td>${fixed(row.current, row.param === "included_miles" ? 0 : 3)}</td>
       <td><input type="number" step="${row.param === "included_miles" ? "1" : "0.01"}" data-role="lower" data-plan="${escapeHtml(row.plan)}" data-param="${escapeHtml(row.param)}" value="${row.lower}"></td>
