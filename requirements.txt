@@ -1,3 +1,8 @@
 numpy
 pandas
 scipy
+
+# only used by r2_sync.py: boto3 in the container to pull the data files from
+# R2, python-dotenv locally to read .env for the one-time `r2_sync.py push`
+boto3
+python-dotenv

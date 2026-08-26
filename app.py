@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import os
 import threading
 import traceback
 import uuid
@@ -23,8 +24,10 @@ from demand_engine import data_options, latest_pricing, run_optimization, run_va
 
 APP_DIR = Path(__file__).resolve().parent
 STATIC_DIR = APP_DIR / "static"
-HOST = "127.0.0.1"
-PORT = 8766
+# Local runs stay on loopback. The container sets both (see Dockerfile) so the
+# Worker can reach it; nothing else in the app changes between the two.
+HOST = os.getenv("HOST", "127.0.0.1")
+PORT = int(os.getenv("PORT", "8766"))
 
 # In-memory job state for long optimization runs.  Jobs are not persisted
 # because the dashboard is intended to run as a local analyst tool.
@@ -119,6 +122,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
         """Route read-only API calls and static-file requests."""
         parsed = urlparse(self.path)
         try:
+            # Cloudflare's container probe (pingEndpoint in worker/index.ts).
+            # Deliberately does not touch the data files -- the container has to
+            # report ready before the first request pulls them from R2.
+            if parsed.path == "/health":
+                self.send_json({"ok": True})
+                return
             if parsed.path == "/api/options":
                 self.send_json({"ok": True, "data": data_options()})
                 return

@@ -13,3 +13,11 @@ docs/*.out
 # cache dirs
 __pycache__/
 *.pyc
+
+# node / wrangler
+node_modules/
+.wrangler/
+
+# local secrets
+.env
+.dev.vars
