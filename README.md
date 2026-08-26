@@ -26,10 +26,8 @@ The dashboard reads these four CSV files from the `data/` folder:
 - `data/user_month_student.csv`
 - `data/user_month_access.csv`
 
-These files contain PII and are not committed to git, so a fresh clone has an
-empty `data/` folder. To build them from new raw data, use the scripts in
-`DataPrep/` and follow `docs/DataCreationGuide.pdf`; both scripts write their
-dashboard copies straight into `data/`.
+Current copies are included. To refresh them with new raw data, use the scripts
+in `DataPrep/` and follow `docs/DataCreationGuide.md`.
 
 ## Python Setup
 
@@ -60,7 +58,7 @@ call external services.
 
 The detailed documentation is in `docs/`:
 
-- `MethodologyGuide.pdf`
-- `DataCreationGuide.pdf`
-- `DashBoardGuide.pdf`
+- [`MethodologyGuide.md`](docs/MethodologyGuide.md)
+- [`DataCreationGuide.md`](docs/DataCreationGuide.md)
+- [`DashBoardGuide.md`](docs/DashBoardGuide.md)
 
