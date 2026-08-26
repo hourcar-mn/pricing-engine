@@ -18,7 +18,7 @@ refresh those inputs when new raw data are available.
 
 ## Required Dashboard Input Files
 
-The dashboard reads these four CSV files from this folder:
+The dashboard reads these four CSV files from the `data/` folder:
 
 - `clean_trips_with_invoice_plan_and_segment.csv`
 - `user_month_regular.csv`
