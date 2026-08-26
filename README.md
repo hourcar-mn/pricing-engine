@@ -7,6 +7,7 @@ refresh those inputs when new raw data are available.
 ## Folder Contents
 
 - `app.py` - local dashboard server and API routes.
+- `data/` - the four CSV input files the dashboard reads.
 - `demand_engine.py` - demand estimation, empirical kernels, forecasting, and
   pricing optimization logic.
 - `RUN_DASHBOARD.py` - launches the dashboard.
@@ -20,10 +21,10 @@ refresh those inputs when new raw data are available.
 
 The dashboard reads these four CSV files from the `data/` folder:
 
-- `clean_trips_with_invoice_plan_and_segment.csv`
-- `user_month_regular.csv`
-- `user_month_student.csv`
-- `user_month_access.csv`
+- `data/clean_trips_with_invoice_plan_and_segment.csv`
+- `data/user_month_regular.csv`
+- `data/user_month_student.csv`
+- `data/user_month_access.csv`
 
 Current copies are included. To refresh them with new raw data, use the scripts
 in `DataPrep/` and follow `docs/DataCreationGuide.md`.
