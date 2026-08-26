@@ -7,6 +7,7 @@ refresh those inputs when new raw data are available.
 ## Folder Contents
 
 - `app.py` - local dashboard server and API routes.
+- `data/` - the four CSV input files the dashboard reads.
 - `demand_engine.py` - demand estimation, empirical kernels, forecasting, and
   pricing optimization logic.
 - `RUN_DASHBOARD.py` - launches the dashboard.
@@ -18,15 +19,17 @@ refresh those inputs when new raw data are available.
 
 ## Required Dashboard Input Files
 
-The dashboard reads these four CSV files from this folder:
+The dashboard reads these four CSV files from the `data/` folder:
 
-- `clean_trips_with_invoice_plan_and_segment.csv`
-- `user_month_regular.csv`
-- `user_month_student.csv`
-- `user_month_access.csv`
+- `data/clean_trips_with_invoice_plan_and_segment.csv`
+- `data/user_month_regular.csv`
+- `data/user_month_student.csv`
+- `data/user_month_access.csv`
 
-Current copies are included. To refresh them with new raw data, use the scripts
-in `DataPrep/` and follow `docs/EVIE_Data_Creation_Guide.tex`.
+These files contain PII and are not committed to git, so a fresh clone has an
+empty `data/` folder. To build them from new raw data, use the scripts in
+`DataPrep/` and follow `docs/DataCreationGuide.pdf`; both scripts write their
+dashboard copies straight into `data/`.
 
 ## Python Setup
 
@@ -57,7 +60,7 @@ call external services.
 
 The detailed documentation is in `docs/`:
 
-- `EVIE_Demand_Estimation_Methodology_Company.tex`
-- `EVIE_Data_Creation_Guide.tex`
-- `EVIE_Dashboard_User_Guide.tex`
+- `MethodologyGuide.pdf`
+- `DataCreationGuide.pdf`
+- `DashBoardGuide.pdf`
 
