@@ -1,2 +1,12 @@
 # data files contain PII and should not be committed to git.
 *.csv
+
+# doc build artifacts
+docs/*.pdf
+docs/*.aux
+docs/*.log
+docs/*.out
+
+# Cache
+__pycache__/
+*.pyc
