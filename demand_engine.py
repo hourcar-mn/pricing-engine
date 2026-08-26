@@ -15,7 +15,7 @@ The pipeline is:
    search-based price optimization.
 
 The code avoids writing files and avoids external services.  Inputs are the CSV
-files in this folder; outputs are returned to the dashboard API.
+files in the ``data/`` folder; outputs are returned to the dashboard API.
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ import pandas as pd
 # File locations, default model controls, and tariff parameter names
 # ---------------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "dashboard_data"
+DATA_DIR = BASE_DIR / "data"
 TRIP_FILE = DATA_DIR / "clean_trips_with_invoice_plan_and_segment.csv"
 USER_MONTH_FILES = {
     "Regular": DATA_DIR / "user_month_regular.csv",
@@ -339,7 +339,7 @@ def read_inputs(segment: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     missing = [str(path.name) for path in required if not path.exists()]
     if missing:
         raise FileNotFoundError(
-            "Dashboard data files must be in the Dashboard folder. "
+            f"Dashboard data files must be in {DATA_DIR}. "
             f"Missing: {', '.join(missing)}"
         )
     user_cols = [

@@ -16,7 +16,7 @@ Outputs
 02_user_month_panels/user_month_student.csv
 
 If WRITE_DASHBOARD_COPIES is True, the clean dashboard inputs are also written
-one folder up so the dashboard can read them directly.
+to the data/ folder one level up so the dashboard can read them directly.
 
 Purpose
 -------
@@ -59,7 +59,7 @@ INPUT_CSV = SCRIPT_DIR / "01_clean_trips_invoice" / \
 OUTPUT_DIR = SCRIPT_DIR / "02_user_month_panels"
 
 WRITE_DASHBOARD_COPIES = True
-DASHBOARD_OUTPUT_DIR = SCRIPT_DIR.parent / "dashboard_data"
+DASHBOARD_OUTPUT_DIR = SCRIPT_DIR.parent / "data"
 
 # Set this to lower (i.e. 12 months) to decrease market size
 K_MONTHS_IN_MARKET = 24
@@ -535,6 +535,8 @@ print(panel.loc[panel["TripCount"] > 0,
 print_stage("STEP 9: Write outputs")
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+if WRITE_DASHBOARD_COPIES:
+    DASHBOARD_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 keep_cols = [
     "UserID",
