@@ -6,6 +6,14 @@
 	"observability": {
 		"enabled": true
 	},
+	// The dashboard is reached at pricing-engine.<account>.workers.dev, with
+	// Cloudflare Access in front of that hostname.
+	"workers_dev": true,
+	// Off because an Access policy is scoped to a hostname: preview deployments
+	// get their own hostnames, which that policy would not cover, and this app
+	// serves per-user trip and invoice data. Turn these back on only alongside
+	// an Access policy that matches them.
+	"preview_urls": false,
 	// the dashboard UI is plain static files; /api/* goes to the Worker, which
 	// forwards to the container
 	"assets": {
