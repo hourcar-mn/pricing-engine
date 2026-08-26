@@ -26,7 +26,7 @@ The dashboard reads these four CSV files from this folder:
 - `user_month_access.csv`
 
 Current copies are included. To refresh them with new raw data, use the scripts
-in `DataPrep/` and follow `docs/EVIE_Data_Creation_Guide.tex`.
+in `DataPrep/` and follow `docs/DataCreationGuide.md`.
 
 ## Python Setup
 
@@ -57,7 +57,7 @@ call external services.
 
 The detailed documentation is in `docs/`:
 
-- `EVIE_Demand_Estimation_Methodology_Company.tex`
-- `EVIE_Data_Creation_Guide.tex`
-- `EVIE_Dashboard_User_Guide.tex`
+- [`MethodologyGuide.md`](docs/MethodologyGuide.md)
+- [`DataCreationGuide.md`](docs/DataCreationGuide.md)
+- [`DashBoardGuide.md`](docs/DashBoardGuide.md)
 
