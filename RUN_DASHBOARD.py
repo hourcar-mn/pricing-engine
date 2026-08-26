@@ -8,8 +8,8 @@ Steps:
 4. Leave the IDE console running while using the dashboard.
 5. When finished, click the red Stop button in the IDE.
 
-The dashboard reads the data files from the "dashboard_data" folder within this Dashboard folder. Put these files
-in the "dashboard_data" folder before running:
+The dashboard reads the data files from the "data" folder next to this file. Put these files
+in the "data" folder before running:
 
 - clean_trips_with_invoice_plan_and_segment.csv
 - user_month_regular.csv
