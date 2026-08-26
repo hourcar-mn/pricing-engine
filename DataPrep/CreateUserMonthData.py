@@ -16,7 +16,7 @@ Outputs
 02_user_month_panels/user_month_student.csv
 
 If WRITE_DASHBOARD_COPIES is True, the clean dashboard inputs are also written
-one folder up so the dashboard can read them directly.
+to the data/ folder one level up so the dashboard can read them directly.
 
 Purpose
 -------
@@ -535,6 +535,8 @@ print(panel.loc[panel["TripCount"] > 0,
 print_stage("STEP 9: Write outputs")
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+if WRITE_DASHBOARD_COPIES:
+    DASHBOARD_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 keep_cols = [
     "UserID",
@@ -567,7 +569,6 @@ for segment in SEGMENTS_TO_KEEP:
     print(f"Wrote: {seg_path.resolve()}  rows: {len(out_seg):,}")
 
     if WRITE_DASHBOARD_COPIES:
-        DASHBOARD_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         dashboard_path = DASHBOARD_OUTPUT_DIR / \
             f"user_month_{segment_stub}.csv"
         out_seg.to_csv(dashboard_path, index=False)

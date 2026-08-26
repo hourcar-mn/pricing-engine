@@ -3,18 +3,18 @@
 
 Inputs
 ------
-Trips_2026-06-08.csv
-Invoices_2026-06-08.csv
+Trips_2026-07-13.csv
+Invoices_2026-07-13.csv
 
 Place both raw CSV files in the same folder as this script, or update
 RAW_DATA_DIR / TRIPS_CSV_NAME / INVOICES_CSV_NAME in the settings block below.
 
 Output
 ------
-01_clean_trips_invoice/clean_trips_with_invoice_plan_and_segment.csv
+DataPrep/01_clean_trips_invoice/clean_trips_with_invoice_plan_and_segment.csv
 
-If WRITE_DASHBOARD_COPY is True, the same file is also written one folder up so
-the dashboard can read it directly.
+If WRITE_DASHBOARD_COPY is True, the same file is also written to the data/
+folder one level up so the dashboard can read it directly.
 
 Purpose
 -------
@@ -72,7 +72,8 @@ OUTPUT_DIR = SCRIPT_DIR / "01_clean_trips_invoice"
 OUTPUT_CSV = OUTPUT_DIR / "clean_trips_with_invoice_plan_and_segment.csv"
 
 WRITE_DASHBOARD_COPY = True
-DASHBOARD_COPY_CSV = SCRIPT_DIR.parent / "data" / \
+DASHBOARD_OUTPUT_DIR = SCRIPT_DIR.parent / "data"
+DASHBOARD_COPY_CSV = DASHBOARD_OUTPUT_DIR / \
     "clean_trips_with_invoice_plan_and_segment.csv"
 
 SERVICE_TYPE_KEEP = "FREE_FLOATING"
@@ -599,7 +600,7 @@ print(f"Wrote: {OUTPUT_CSV.resolve()}")
 print(f"Rows written: {len(out):,}")
 
 if WRITE_DASHBOARD_COPY:
-    DASHBOARD_COPY_CSV.parent.mkdir(parents=True, exist_ok=True)
+    DASHBOARD_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     out.to_csv(DASHBOARD_COPY_CSV, index=False)
     print(f"Wrote dashboard copy: {DASHBOARD_COPY_CSV.resolve()}")
 
