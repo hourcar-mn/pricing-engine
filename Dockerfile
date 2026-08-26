@@ -1,6 +1,12 @@
+# check=skip=FromPlatformFlagConstDisallowed
+
 # Backend container for Cloudflare Containers. Runs the same app.py server as
 # local dev -- the only differences are the bind address and where the data
 # files come from (R2, see r2_sync.py).
+#
+# The platform pin is deliberate and the lint for it is skipped above:
+# Cloudflare only runs linux/amd64 images, so building for the host's
+# architecture on an ARM machine would produce something that can't be deployed.
 FROM --platform=linux/amd64 python:3.13-slim
 
 WORKDIR /app
