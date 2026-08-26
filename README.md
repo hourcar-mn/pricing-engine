@@ -9,7 +9,7 @@ refresh those inputs when new raw data are available.
 - `app.py` - local dashboard server and API routes.
 - `demand_engine.py` - demand estimation, empirical kernels, forecasting, and
   pricing optimization logic.
-- `RUN_DASHBOARD_IN_SPYDER.py` - optional launcher for Spyder users.
+- `RUN_DASHBOARD.py` - launches the dashboard.
 - `static/` - browser interface files used by the local dashboard.
 - `DataPrep/` - scripts for creating the dashboard input CSVs from raw company
   trip and invoice exports.
