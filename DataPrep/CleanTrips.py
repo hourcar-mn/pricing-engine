@@ -72,7 +72,7 @@ OUTPUT_DIR = SCRIPT_DIR / "01_clean_trips_invoice"
 OUTPUT_CSV = OUTPUT_DIR / "clean_trips_with_invoice_plan_and_segment.csv"
 
 WRITE_DASHBOARD_COPY = True
-DASHBOARD_COPY_CSV = SCRIPT_DIR.parent / \
+DASHBOARD_COPY_CSV = SCRIPT_DIR.parent / "data" / \
     "clean_trips_with_invoice_plan_and_segment.csv"
 
 SERVICE_TYPE_KEEP = "FREE_FLOATING"
@@ -599,6 +599,7 @@ print(f"Wrote: {OUTPUT_CSV.resolve()}")
 print(f"Rows written: {len(out):,}")
 
 if WRITE_DASHBOARD_COPY:
+    DASHBOARD_COPY_CSV.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(DASHBOARD_COPY_CSV, index=False)
     print(f"Wrote dashboard copy: {DASHBOARD_COPY_CSV.resolve()}")
 

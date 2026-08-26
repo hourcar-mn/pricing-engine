@@ -59,7 +59,7 @@ INPUT_CSV = SCRIPT_DIR / "01_clean_trips_invoice" / \
 OUTPUT_DIR = SCRIPT_DIR / "02_user_month_panels"
 
 WRITE_DASHBOARD_COPIES = True
-DASHBOARD_OUTPUT_DIR = SCRIPT_DIR.parent / "dashboard_data"
+DASHBOARD_OUTPUT_DIR = SCRIPT_DIR.parent / "data"
 
 # Set this to lower (i.e. 12 months) to decrease market size
 K_MONTHS_IN_MARKET = 24
@@ -567,6 +567,7 @@ for segment in SEGMENTS_TO_KEEP:
     print(f"Wrote: {seg_path.resolve()}  rows: {len(out_seg):,}")
 
     if WRITE_DASHBOARD_COPIES:
+        DASHBOARD_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         dashboard_path = DASHBOARD_OUTPUT_DIR / \
             f"user_month_{segment_stub}.csv"
         out_seg.to_csv(dashboard_path, index=False)
