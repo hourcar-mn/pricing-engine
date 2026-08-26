@@ -1,0 +1,28 @@
+.git
+.venv
+venv
+env
+__pycache__
+**/__pycache__
+.vscode
+.wrangler
+.env
+.dev.vars
+node_modules
+worker
+wrangler.jsonc
+package.json
+package-lock.json
+tsconfig.json
+
+# served by the Worker from ./static, not by the container
+static
+
+# the container is the API only; these are analyst-side
+DataPrep
+docs
+
+# pulled from R2 at runtime, see r2_sync.py. Copying the 411MB of CSVs into the
+# image would also put per-user trip and invoice data in the image layers.
+data
+*.csv

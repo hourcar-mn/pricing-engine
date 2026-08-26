@@ -1,0 +1,46 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "pricing-engine",
+	"main": "worker/index.ts",
+	"compatibility_date": "2026-08-26",
+	"observability": {
+		"enabled": true
+	},
+	// the dashboard UI is plain static files; /api/* goes to the Worker, which
+	// forwards to the container
+	"assets": {
+		"directory": "./static",
+		"run_worker_first": [
+			"/api/*"
+		]
+	},
+	"containers": [
+		{
+			"class_name": "EngineContainer",
+			"image": "./Dockerfile",
+			// measured: the pooled frames are ~430MB and the load peaks well
+			// under 2GB, so 8GiB is headroom, not a requirement. The 2 vCPU is
+			// the part that matters -- run_optimization is the long pole.
+			// Move up to standard-4 if optimization wall-clock is the complaint.
+			"instance_type": "standard-3",
+			// job state is in-process, see worker/index.ts
+			"max_instances": 1
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "ENGINE",
+				"class_name": "EngineContainer"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"EngineContainer"
+			]
+		}
+	]
+}

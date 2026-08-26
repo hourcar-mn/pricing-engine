@@ -31,6 +31,8 @@ from typing import Callable, Dict, Iterable, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
+import r2_sync
+
 
 # ---------------------------------------------------------------------------
 # File locations, default model controls, and tariff parameter names
@@ -336,11 +338,17 @@ def read_inputs(segment: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     if segment not in USER_MONTH_FILES:
         raise ValueError(f"Unknown segment {segment!r}")
     required = [TRIP_FILE, USER_MONTH_FILES[segment]]
-    missing = [str(path.name) for path in required if not path.exists()]
+    missing = [path for path in required if not path.exists()]
+    if missing:
+        # In the container the data files are not baked into the image; they
+        # come from R2 on first use. Locally this is a no-op and the error
+        # below stands unchanged.
+        r2_sync.ensure_inputs(missing)
+        missing = [path for path in required if not path.exists()]
     if missing:
         raise FileNotFoundError(
             f"Dashboard data files must be in {DATA_DIR}. "
-            f"Missing: {', '.join(missing)}"
+            f"Missing: {', '.join(path.name for path in missing)}"
         )
     user_cols = [
         "UserID",
