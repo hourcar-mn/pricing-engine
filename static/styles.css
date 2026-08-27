@@ -1,14 +1,55 @@
-/* Shared design tokens. */
+/* Campton is the HOURCAR/Evie brand face. Served from img.hourcar.net with
+   Access-Control-Allow-Origin: *, so no local copy is needed.
+   The semi-bold face is declared over the 600-700 range because the dashboard
+   already uses font-weight: 700 throughout; without the range the browser would
+   synthesise a fake bold instead of using the real semi-bold. */
+@font-face {
+  font-family: "Campton";
+  src: url("https://img.hourcar.net/fonts/CamptonBook.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Campton";
+  src: url("https://img.hourcar.net/fonts/CamptonSemiBold.otf") format("opentype");
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Shared design tokens.
+   Brand values come from the HOURCAR design system. */
 :root {
-  --bg: #f5f7f9;
-  --panel: #ffffff;
-  --ink: #17202a;
-  --muted: #5f6b7a;
-  --line: #d9e0e7;
-  --blue: #2364aa;
-  --green: #287a4b;
-  --red: #b42318;
-  --amber: #9a6700;
+  /* Brand */
+  --evie-green: #34B78F; /* PMS 2413 C -- Evie Carshare primary */
+
+  /* Surfaces and text */
+  --bg: #F7F8FA;
+  --panel: #FFFFFF;
+  --ink: #1A1D20;
+  --muted: #6B6E72;
+  --line: #E5E7EB;
+
+  /* --blue is the brand navy, PMS 7685 C. --green, --red and --amber carry
+     meaning in the results tables and warning banners, so they are the design
+     system's darkened status variants rather than the brand hues: --evie-green
+     itself is only 2.3:1 on white and unreadable as text. Every one of them
+     clears WCAG AA (4.5:1) against both --panel and its own tint below, so
+     check any replacement before swapping one in. */
+  --blue: #2C5697;
+  --green: #27764A;
+  --red: #C53030;
+  --amber: #9C5D00;
+
+  --green-bg: #E5F4EC;
+  --green-line: #A9D8BF;
+  --amber-bg: #FFF3DA;
+  --amber-line: #E7C98A;
+  --red-bg: #FBE4E4;
+  --red-line: #EFB0B0;
+
+  --font-sans: "Campton", "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -18,7 +59,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .topbar {
@@ -27,14 +68,31 @@ body {
   align-items: flex-start;
   gap: 24px;
   padding: 20px 28px;
-  background: #ffffff;
-  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  border-bottom: 2px solid var(--evie-green);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.brand-logo {
+  flex: none;
+  height: 40px;
+  width: auto;
+  padding-right: 18px;
+  border-right: 1px solid var(--line);
 }
 
 h1 {
   margin: 0 0 4px;
   font-size: 24px;
-  letter-spacing: 0;
+  font-weight: 600;
+  color: var(--blue);
+  letter-spacing: -0.01em;
 }
 
 p {
@@ -190,7 +248,7 @@ textarea {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fbfcfd;
+  background: #FAFBFC;
 }
 
 .model-spec-controls legend,
@@ -235,7 +293,7 @@ textarea {
 .run-header > div {
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: #fbfcfd;
+  background: #FAFBFC;
   padding: 10px 12px;
 }
 
@@ -261,12 +319,12 @@ textarea {
   border-radius: 6px;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  background: #f8fafc;
+  background: #F1F3F6;
 }
 
-.warning.good { background: #edf8f0; border-color: #b7dfc3; color: var(--green); }
-.warning.warn { background: #fff8e6; border-color: #ead18c; color: var(--amber); }
-.warning.danger { background: #fff0ee; border-color: #f1b3ad; color: var(--red); }
+.warning.good { background: var(--green-bg); border-color: var(--green-line); color: var(--green); }
+.warning.warn { background: var(--amber-bg); border-color: var(--amber-line); color: var(--amber); }
+.warning.danger { background: var(--red-bg); border-color: var(--red-line); color: var(--red); }
 
 .section-title {
   margin: 22px 0 10px;
@@ -285,7 +343,7 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 12px;
-  background: #fbfcfd;
+  background: #FAFBFC;
 }
 
 .kpi-card strong,
@@ -302,9 +360,9 @@ textarea {
   border: 1px solid var(--line);
 }
 
-.notice.good { background: #edf8f0; border-color: #b7dfc3; color: var(--green); }
-.notice.warn { background: #fff8e6; border-color: #ead18c; color: var(--amber); }
-.notice.danger { background: #fff0ee; border-color: #f1b3ad; color: var(--red); }
+.notice.good { background: var(--green-bg); border-color: var(--green-line); color: var(--green); }
+.notice.warn { background: var(--amber-bg); border-color: var(--amber-line); color: var(--amber); }
+.notice.danger { background: var(--red-bg); border-color: var(--red-line); color: var(--red); }
 
 .notice.page-banner {
   margin: 0 0 16px;
@@ -315,7 +373,7 @@ textarea {
 .model-spec-card {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fbfcfd;
+  background: #FAFBFC;
   padding: 12px;
 }
 
@@ -367,8 +425,8 @@ textarea {
 }
 
 .boundary-note {
-  border: 1px solid #f1b3ad;
-  background: #fff0ee;
+  border: 1px solid var(--red-line);
+  background: var(--red-bg);
   color: var(--red);
   border-radius: 6px;
   padding: 10px 12px;
@@ -416,7 +474,7 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 4px 16px 16px;
-  background: #fdfefe;
+  background: #FCFDFD;
 }
 
 .segment-result > summary {
@@ -466,7 +524,7 @@ textarea {
 }
 
 .axis-label {
-  fill: #4b5563;
+  fill: #6B6E72;
   font-size: 12px;
 }
 
@@ -481,13 +539,13 @@ textarea {
 }
 
 .split-label {
-  fill: #4b5563;
+  fill: #6B6E72;
   font-size: 12px;
   font-weight: 700;
 }
 
 .bar-value {
-  fill: #374151;
+  fill: #3B3E40;
   font-size: 11px;
 }
 
@@ -544,12 +602,12 @@ td:first-child {
 
 th {
   color: var(--muted);
-  background: #f8fafc;
+  background: #F1F3F6;
   font-size: 12px;
 }
 
 .optimization-parameter-table tr.boundary-row td {
-  background: #fff5f3;
+  background: var(--red-bg);
 }
 
 .optimization-parameter-table td.boundary-cell {
@@ -568,7 +626,7 @@ th {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 14px;
-  background: #fbfcfd;
+  background: #FAFBFC;
 }
 
 .pricing-card h3 {
@@ -616,7 +674,7 @@ th {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: #fbfcfd;
+  background: #FAFBFC;
 }
 
 .progress-grid strong {
@@ -626,8 +684,8 @@ th {
 .error,
 .error-box {
   color: var(--red);
-  background: #fff0ee;
-  border: 1px solid #f1b3ad;
+  background: var(--red-bg);
+  border: 1px solid var(--red-line);
   border-radius: 6px;
   padding: 10px;
   margin-top: 10px;
