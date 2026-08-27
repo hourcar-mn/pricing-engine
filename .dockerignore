@@ -19,7 +19,7 @@ tsconfig.json
 static
 
 # the container is the API only; these are analyst-side
-DataPrep
+data_prep
 docs
 
 # pulled from R2 at runtime, see r2_sync.py. Copying the 411MB of CSVs into the

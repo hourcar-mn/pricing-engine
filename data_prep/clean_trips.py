@@ -1,5 +1,5 @@
 """
-01_clean_trips_attach_invoice_plan_and_segment.py
+clean_trips.py
 
 Inputs
 ------
@@ -11,7 +11,7 @@ RAW_DATA_DIR / TRIPS_CSV_NAME / INVOICES_CSV_NAME in the settings block below.
 
 Output
 ------
-DataPrep/01_clean_trips_invoice/clean_trips_with_invoice_plan_and_segment.csv
+data_prep/01_clean_trips_invoice/clean_trips_with_invoice_plan_and_segment.csv
 
 If WRITE_DASHBOARD_COPY is True, the same file is also written to the data/
 folder one level up so the dashboard can read it directly.
@@ -94,14 +94,14 @@ CANCEL_COL = "IsCancel"
 
 
 # =============================================================================
-# EVIE POSTED PRICING RULES
+# Evie POSTED PRICING RULES
 # =============================================================================
 
 # To add a future price change:
 # 1. Add a new EVIE_RULES_START_* timestamp.
 # 2. Add a new EVIE_PRICING_RULES entry with all four plans and all tariff keys.
 # 3. Add the new regime check at the top of pricing_regime_at_trip().
-# 4. Make the same pricing-rule update in CreateUserMonthData.py.
+# 4. Make the same pricing-rule update in create_user_month_data.py.
 
 EVIE_RULES_START_2023 = pd.Timestamp("2023-03-31")
 EVIE_RULES_START_2024 = pd.Timestamp("2024-03-04")

@@ -1,11 +1,11 @@
 """
-02_create_user_month_panels.py
+create_user_month_data.py
 
 Input
 -----
 01_clean_trips_invoice/clean_trips_with_invoice_plan_and_segment.csv
 
-Run CleanTrips.py first. By default, this script reads the intermediate clean
+Run clean_trips.py first. By default, this script reads the intermediate clean
 trip file from the same folder as this script.
 
 Outputs
@@ -28,7 +28,7 @@ Logic
 2. Keep pre-2023-04 trips only for market-membership history.
 3. Start the output panel in 2023-04.
 4. Create one row for every non-conflicting user and every output month.
-5. Mark InMarket = 1 if the user used EVIE in the current month or in the prior K months.
+5. Mark InMarket = 1 if the user used Evie in the current month or in the prior K months.
 6. Aggregate monthly trips, distance, duration, and modal monthly plan.
 7. Attach monthly posted paid-plan and free-plan prices using the pricing rule active for the most days in the month.
 
@@ -73,14 +73,14 @@ SEGMENTS_TO_KEEP = ["Regular", "Access", "Student"]
 
 
 # =============================================================================
-# EVIE POSTED PRICING RULES
+# Evie POSTED PRICING RULES
 # =============================================================================
 
 # To add a future price change:
 # 1. Add a new EVIE_RULES_START_* timestamp.
 # 2. Add a new EVIE_PRICING_RULES entry with all four plans and all tariff keys.
 # 3. Add the new regime check at the top of pricing_regime_at_day().
-# 4. Make the same pricing-rule update in CleanTrips.py.
+# 4. Make the same pricing-rule update in clean_trips.py.
 
 EVIE_RULES_START_2023 = pd.Timestamp("2023-03-31")
 EVIE_RULES_START_2024 = pd.Timestamp("2024-03-04")
