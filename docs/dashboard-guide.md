@@ -1,8 +1,8 @@
-# EVIE Demand Dashboard User Guide
+# Evie Demand Dashboard User Guide
 
 ## 1. Purpose of the Dashboard
 
-The EVIE demand dashboard is a local analysis tool for:
+The Evie demand dashboard is a local analysis tool for:
 
 1. validating the structural demand model against historical data;
 2. running what-if pricing scenarios; and
@@ -19,7 +19,7 @@ The dashboard reads four CSV files from its data folder:
 - `user_month_student.csv`
 - `user_month_access.csv`
 
-To recreate these files from new raw company exports, see [`DataCreationGuide.md`](DataCreationGuide.md).
+To recreate these files from new raw company exports, see [`data-creation-guide.md`](data-creation-guide.md).
 
 ## 3. Opening the Dashboard
 
@@ -60,7 +60,7 @@ The latest month can be incomplete. If `Exclude latest month` is checked, the da
 The model specification controls determine which terms enter deterministic utility:
 
 - **Expected payment**: includes the expected monthly user payment coefficient. This is required for what-if and optimization because demand must respond to price. In Model Validation it can be unchecked as a diagnostic comparison.
-- **Intercept**: shifts all inside EVIE products relative to the no-use outside option.
+- **Intercept**: shifts all inside Evie products relative to the no-use outside option.
 - **Count-bin fixed effects**: controls for average preference for each trip-count category.
 - **Plan fixed effects**: controls for average preference for the paid plan versus Free Plan.
 - **Month-of-year fixed effects**: controls for seasonality.
@@ -150,21 +150,21 @@ The top cards report MAE for:
 
 Each is shown separately for training and testing months.
 
-For any monthly outcome $y_t$ and prediction $\widehat{y}_t$,
+For any monthly outcome $`y_t`$ and prediction $`\widehat{y}_t`$,
 
-$$
+```math
 \text{MAE} = \frac{1}{T} \sum_{t=1}^{T} |y_t - \widehat{y}_t|,
-$$
+```
 
-$$
+```math
 \text{RMSE} = \sqrt{\frac{1}{T} \sum_{t=1}^{T} (y_t - \widehat{y}_t)^2},
-$$
+```
 
 and
 
-$$
+```math
 \text{MAPE} = \frac{1}{T} \sum_{t=1}^{T} \left| \frac{y_t - \widehat{y}_t}{y_t} \right|.
-$$
+```
 
 MAPE is undefined when the actual value is zero; the dashboard skips zero denominators.
 
