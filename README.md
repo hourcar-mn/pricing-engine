@@ -70,3 +70,7 @@ The detailed documentation is in `docs/`:
 - [`cloudflare-deployment.md`](docs/cloudflare-deployment.md) - running it on
   Cloudflare instead of locally.
 
+
+## License
+
+MIT, see [`LICENSE`](LICENSE).
