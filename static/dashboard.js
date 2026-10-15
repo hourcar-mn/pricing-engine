@@ -738,7 +738,7 @@ function renderWhatIfComparison(successful) {
 // A single banner summarizing whether the estimated price coefficients are
 // negative (expected: higher prices reduce predicted demand), positive
 // (counter to theory, worth investigating), or mixed across the selected
-// segments — without listing coefficients per segment.
+// segments, without listing coefficients per segment.
 function renderPriceCoefficientSignBanner(rows) {
   const coefficients = rows
     .map((row) => Number(row.priceCoefficient))
