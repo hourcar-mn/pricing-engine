@@ -74,3 +74,11 @@ The detailed documentation is in `docs/`:
 ## License
 
 MIT, see [`LICENSE`](LICENSE).
+
+## Trademarks
+
+HOURCAR, Evie, the Evie logo (`static/evie-logo.png`), and the favicons
+(`static/favicon.ico`, `static/favicon.png`) are trademarks of HOURCAR. They are
+not covered by the MIT license: you may not use them to brand your own product,
+service, or deployment, or in any way that suggests HOURCAR endorses it. If you
+reuse this code, replace them with your own branding.
